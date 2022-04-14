@@ -1,0 +1,33 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fumes = {editable = true, path = "."}
+imageio = "*"
+pytest = "*"
+shapely = "*"
+pylint = "*"
+pydocstyle = "*"
+pep8 = "*"
+jupyter = "*"
+ipykernel = "*"
+plotly = "*"
+ipympl = "*"
+scikit-image = "*"
+distfit = "*"
+netCDF4 = "*"
+gsw = "*"
+utm = "*"
+pyyaml = "*"
+torch = "*"
+gpytorch = "*"
+sockets = "*"
+visdom = "*"
+kaleido = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.7"

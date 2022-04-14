@@ -1,0 +1,10 @@
+*.png
+*.gif
+*.txt
+*.csv
+*.bag
+*.nc
+*.toml
+output/*
+data/*
+fumes/fumes.egg-info/

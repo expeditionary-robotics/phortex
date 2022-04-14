@@ -1,0 +1,4 @@
+[flake8]
+max-line-length=100
+ignore=F401,F821,W504
+
