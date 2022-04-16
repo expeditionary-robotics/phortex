@@ -26,9 +26,9 @@ CORES=8
 HOURS=12
 MINUTES=0
 GPUS=0
-ENVIRONMENT=frii
+ENVIRONMENT=fumes
 MAIL=ALL
-MAIL_USER=$USER@mit.edu
+MAIL_USER=${USER}@mit.edu
 DEPENDENCY=''
 
 # Assign named arguments to variables (and shift them)
@@ -80,8 +80,6 @@ if [ ${USER} = "geflaspo" ]; then
     NODE_LIST="newnodes,sched_mit_hill,sched_any"
 elif [ ${USER} = "seknight" ]; then
     NODE_LIST="newnodes,sched_any"
-elif [ ${USER} = "franklyn" ]; then
-    NODE_LIST="newnodes,sched_any"
 else
     NODE_LIST="newnodes,sched_mit_hill,sched_engaging_default,sched_any"
 fi
@@ -123,11 +121,10 @@ sbatch <<-EOT
 # Print command
 echo -e "python $args\n"
 # Load supporting modules
-module add anaconda3/2019.10
-module add ffmpeg
-# Activate conda environment
-source activate ${ENVIRONMENT}
+module add python/3.8.3
+# Activate python environment
+source /home/${USER}/${ENVIRONMENT}/bin/activate
 # Execute python script
 python $args
-source deactivate
+deactivate
 EOT
