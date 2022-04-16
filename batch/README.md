@@ -14,19 +14,25 @@ We're following the instructions [here](https://engaging-web.mit.edu/eofe-wiki/v
 5. Change into/ensure that you are in the fumes repo: `cd fumes`
 6. Install the required Python packages: `pip install -r requirements.txt`. This instalation will take a while. Note: if the `requirements.txt` file needs to be updated to match an updated `Pipfile`, then run `pipenv lock -r > requirements.txt` from within the `fumes` directory. 
 7. You can then activate and deactive the `fumes` virtual environment, using the above activate command and the `deactivate` command. These could be, for example, aliased to something easy to remember in your `~/.bashrc` file. 
+8. Add the following to your `~/.bashrc` file:
+```
+alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; source .env" 
+```
 
 ## Running Python scripts on the cluster
 Navigate to the `fumes/batch` directory. If it doesn't already exist, create a `slurm` folder within the `fumes/batch` directory: `mkdir `fumes/batch/slurm`.
 
 Python scripts can be submitted as jobs by running:
 ```
-bash batch_python.sh ../fumes/examples/post_cruise_examples/demo0-bullseye_flexible_trajectory_opt.py
+bash batch/batch_python.sh fumes/examples/post_cruise_examples/demo0-bullseye_flexible_trajectory_opt.py
 ```
 The output and error files will be written the to `slurm` folder within `fumes/batch`. 
 
+NOTE: Always call the `batch_python.sh` script from within the `fumes` top-level diretory. Right now, this is the only way that the environment variables get set correctly. TODO: should fix this to let you run it from anywhere. 
+
 The `batch_python.sh` script takes commandline arguments and Python script arguments - see the documentation at the start of the file. For example, I can run:
 ```
-src/batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
+batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
 ```
 
 This `batch_python.sh` script is a building block - it allows you to run single python scripts with command-line arguments. This can be adapted to a pytyon script with many parameter values. See the samples in `bulk_batch_predict.sh`. 
@@ -35,7 +41,7 @@ This `batch_python.sh` script is a building block - it allows you to run single 
 Let's add some alias and commands to your ~/.bashrc to make submitting jobs, requesting compute nodes, and checking job statuses easier:
 ```
 # Fumes virtual environment 
-alias fumes="module add python/3.8.3; source /home/geflaspo/fumes/bin/activate"
+alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; source .env" 
 
 # Python path
 export PYTHONPATH="${PYTHONPATH}:$HOME/fumes"
