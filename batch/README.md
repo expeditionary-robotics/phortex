@@ -14,6 +14,10 @@ We're following the instructions [here](https://engaging-web.mit.edu/eofe-wiki/v
 5. Change into/ensure that you are in the fumes repo: `cd fumes`
 6. Install the required Python packages: `pip install -r requirements.txt`. This instalation will take a while. Note: if the `requirements.txt` file needs to be updated to match an updated `Pipfile`, then run `pipenv lock -r > requirements.txt` from within the `fumes` directory. 
 7. You can then activate and deactive the `fumes` virtual environment, using the above activate command and the `deactivate` command. These could be, for example, aliased to something easy to remember in your `~/.bashrc` file. 
+8. Add the following to your `~/.bashrc` file:
+```
+alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; source .env" 
+```
 
 ## Running Python scripts on the cluster
 Navigate to the `fumes/batch` directory. If it doesn't already exist, create a `slurm` folder within the `fumes/batch` directory: `mkdir `fumes/batch/slurm`.
@@ -35,7 +39,7 @@ This `batch_python.sh` script is a building block - it allows you to run single 
 Let's add some alias and commands to your ~/.bashrc to make submitting jobs, requesting compute nodes, and checking job statuses easier:
 ```
 # Fumes virtual environment 
-alias fumes="module add python/3.8.3; source /home/geflaspo/fumes/bin/activate"
+alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; source .env" 
 
 # Python path
 export PYTHONPATH="${PYTHONPATH}:$HOME/fumes"
