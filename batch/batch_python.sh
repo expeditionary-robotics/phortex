@@ -2,9 +2,9 @@
 # Submits a given Python script to the cluster using sbatch
 #
 # Example uses:
-#   src/batch/batch_python.sh script.py (arg2) (arg3) (arg4)
-#   src/batch/batch_python.sh --memory 10 script.py (arg2) (arg3) (arg4)
-#   src/batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
+#   batch/batch_python.sh script.py (arg2) (arg3) (arg4)
+#   batch/batch_python.sh --memory 10 script.py (arg2) (arg3) (arg4)
+#   batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
 #
 # Named args (optional, should precede Python script name to override default)
 #   -m | --memory : memory to request in GB
@@ -124,6 +124,7 @@ echo -e "python $args\n"
 module add python/3.8.3
 # Activate python environment
 source /home/${USER}/${ENVIRONMENT}/bin/activate
+source .env
 # Execute python script
 python $args
 deactivate
