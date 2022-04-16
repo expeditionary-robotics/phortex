@@ -24,13 +24,15 @@ Navigate to the `fumes/batch` directory. If it doesn't already exist, create a `
 
 Python scripts can be submitted as jobs by running:
 ```
-bash batch_python.sh ../fumes/examples/post_cruise_examples/demo0-bullseye_flexible_trajectory_opt.py
+bash batch/batch_python.sh fumes/examples/post_cruise_examples/demo0-bullseye_flexible_trajectory_opt.py
 ```
 The output and error files will be written the to `slurm` folder within `fumes/batch`. 
 
+NOTE: Always call the `batch_python.sh` script from within the `fumes` top-level diretory. Right now, this is the only way that the environment variables get set correctly. TODO: should fix this to let you run it from anywhere. 
+
 The `batch_python.sh` script takes commandline arguments and Python script arguments - see the documentation at the start of the file. For example, I can run:
 ```
-src/batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
+batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
 ```
 
 This `batch_python.sh` script is a building block - it allows you to run single python scripts with command-line arguments. This can be adapted to a pytyon script with many parameter values. See the samples in `bulk_batch_predict.sh`. 
