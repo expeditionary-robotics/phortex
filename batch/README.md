@@ -1,7 +1,25 @@
 # Code for setting up your workspace
 First, clone the `fumes` repository to your home directory on the Engaging cluster. Next, we need to set up the `fumes` Python virutal environemnt. 
 
-## Setup your Python virtual environment on the Engaging cluster 
+
+## (pipenv) Setup your Python virtual environment on the Engaging cluster 
+1. Log into an Engaging login node via ssh, e.g., the following command ssh's (with user geflaspo, assuming your ssh key is located at ~/.ssh/eofe-key) and additionally fowards the port 8888 using Jupyter notebooks on Engaging:
+  ```
+  ssh -i ~/.ssh/eofe-key -tt geflaspo@eofe8.mit.edu -L 8888:localhost:8888
+  ```
+2. We're using Python 3.8.3. Add this module to your Engaging node: `module add python/3.8.3`
+3. Install pipenv as a user: `pipenv install --user`
+4. Move into the fumes directory `cd /home/[username]/fumes`
+5. Install pipenv `pipenv install` from within the fumes directory 
+6. Install the required Python packages: `pipenv install`. This instalation will take a while.
+7. You can then activate and deactive the `fumes` virtual environment, using the `pipenv shell` and `exit` commands. These could be, for example, aliased to something easy to remember in your `~/.bashrc` file. 
+11. Add the following to your `~/.bashrc` file:
+```
+alias fumes="cd /home/${USER}/fumes; pipenv shell" 
+```
+
+
+## (virtualenv [depricated]) Setup your Python virtual environment on the Engaging cluster 
 We're following the instructions [here](https://engaging-web.mit.edu/eofe-wiki/virtual_envs/scripted/python_venv/) to setup a Python virtual environment on Engaging. 
 
 1. Log into an Engaging login node via ssh, e.g., the following command ssh's and additionally fowards the port 8888 using Jupyter notebooks on Engaging:
@@ -41,7 +59,7 @@ This `batch_python.sh` script is a building block - it allows you to run single 
 Let's add some alias and commands to your ~/.bashrc to make submitting jobs, requesting compute nodes, and checking job statuses easier:
 ```
 # Fumes virtual environment 
-alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; source .env" 
+alias fumes="cd /home/${USER}/fumes; pipenv shell" 
 
 # Python path
 export PYTHONPATH="${PYTHONPATH}:$HOME/fumes"
