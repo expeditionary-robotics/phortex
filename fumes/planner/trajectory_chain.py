@@ -38,24 +38,23 @@ class TrajectoryChain(Planner):
             # Override the start time and start point of each lawnmower
             planner.traj_generator.t0 = t  # TODO: should put this back in
             planner.traj_generator.start_point = start_point
+            planner.id = f"chain{i}_"  # set the planner id
 
             # # Get maximum value of environment at time t
             # # TODO: change this try/except interface to allow
             # # models to know if they're 3d or 2d
             try:
                 # Try 3D get_maxima function
-                # import pdb; pdb.set_trace()
                 xm, ym, zm = self.planners[0].env_model.get_maxima(
                     t, z=[planner.traj_generator.alt])
             except Exception as e:
                 # Except to 2D get_maxima function
                 xm, ym = self.planners[0].env_model.get_maxima(t)
+
+            # Set the initial parameter values based on the environment maximum
             x0 = list(planner.x0)
-            try:
-                x0[planner.param_names["origin_x"]] = xm
-                x0[planner.param_names["origin_y"]] = ym
-            except:
-                import pdb; pdb.set_trace()
+            x0[planner.param_names["origin_x"]] = xm
+            x0[planner.param_names["origin_y"]] = ym
             planner.x0 = tuple(x0)
 
             # Get the next trajectory in the chain
@@ -64,11 +63,11 @@ class TrajectoryChain(Planner):
                                                from_cache=from_cache))
 
             print("\tPlanned parameters (lh, lw, orientation, origin_x, origin_y):",
-                    traj_chain[-1].lh,
-                    traj_chain[-1].lw,
-                    traj_chain[-1].orientation,
-                    traj_chain[-1].origin[0],
-                    traj_chain[-1].origin[1])
+                  traj_chain[-1].lh,
+                  traj_chain[-1].lw,
+                  traj_chain[-1].orientation,
+                  traj_chain[-1].origin[0],
+                  traj_chain[-1].origin[1])
 
             # Update the soft origin
             soft_origin = (
@@ -87,7 +86,7 @@ class TrajectoryChain(Planner):
 
         t0 = traj_chain[0].t0
         vel = traj_chain[0].vel
+        # [TODO]: we want chains to be able to have multiple altitudes
         # alt = [t.altitude for t in traj_chain]
         alt = traj_chain[0].altitude
-        # [TODO]: we want chains to be able to have multiple altitudes
         return Chain(t0, vel, traj_chain, alt)

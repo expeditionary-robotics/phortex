@@ -52,6 +52,7 @@ class TrajectoryOpt(Planner):
         self.param_names = param_names
         self.max_iters = max_iters
         self.tol = tol
+        self.id = ""
 
         self.neval = 1
 
@@ -205,6 +206,6 @@ class TrajectoryOpt(Planner):
             visualize_and_save_traj(
                 traj,
                 self.env_model.extent,
-                traj_name=os.path.join(os.getenv("FUMES_OUTPUT"), f"planning/temp{self.neval}"))
+                traj_name=os.path.join(os.getenv("FUMES_OUTPUT"), f"planning/temp_{self.id}iter{self.neval}"))
             print("Done.")
         self.neval += 1
