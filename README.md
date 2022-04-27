@@ -9,7 +9,7 @@ Project Python dependencies are managed by `pipenv`. You may need to install `pi
 
 You may want to add the following to your `~/.bashrc` (or appropriate file):
 ```
-alias fumes="cd /<path to rrg repo>/rrg/src/planning/fumes; pipenv shell"
+alias fumes="cd /<path to fumes repo>/fumes; pipenv shell"
 ```
 Then, when starting a new terminal, typing `fumes` will go to the correct directory, activate the fumes Python virtual environment, and load the necessary environment variables, located in `.env`.
 

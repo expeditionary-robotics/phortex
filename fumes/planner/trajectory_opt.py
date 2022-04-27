@@ -143,14 +143,14 @@ class TrajectoryOpt(Planner):
         #### Solve optimization ####
         ############################
 
-        # print(">>>>>Generator time.")
-        # tic()
-        # traj = self.traj_generator.generate(*self.x0)
-        # toc()
-        # tic()
-        # test = self.reward.eval(traj, self.env_model, from_cache=from_cache)
-        # toc()
-        # print("<<<<<Done.")
+        print(">>>>>Generator time.")
+        tic()
+        traj = self.traj_generator.generate(*self.x0)
+        toc()
+        tic()
+        test = self.reward.eval(traj, self.env_model, from_cache=from_cache)
+        toc()
+        print("<<<<<Done.")
 
         if self.max_iters is None:
             options = {'disp': True}
