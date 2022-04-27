@@ -31,15 +31,22 @@ experiment_name = "stationarymtt_iterativeplans"
 
 # Set iteration parameters
 if code_test is True:
-    sample_iter = 1  # number of samples to search over
+    sample_iter = 10  # number of samples to search over
     burn = 1  # number of burn-in samples
     plan_iter = 1  # planning iterations
     outer_iter = 2  # number of traj and model update loops
+    samp_dist = 5.0  # distance between samples (in meters)
+    time_resolution = 3600  # time resolution (in seconds)
+    duration = 2 * 3600  # total mission time (in seconds)
+
 else:
     sample_iter = 100  # number of samples to search over
     burn = 50  # number of burn-in samples
     plan_iter = 100  # planning iterations
     outer_iter = 5  # number of traj and model update loops
+    samp_dist = 0.5  # distance between samples (in meters)
+    time_resolution = 3600 * 4  # time resolution (in seconds)
+    duration = 8 * 60 * 60  # total mission time (in seconds)
 
 # "Global" Model Parameters
 z = np.linspace(0, 200, 100)  # height to integrate over
@@ -58,17 +65,17 @@ E = 0.255
 # Inferred Source Params
 v0_inf = distfit(distr='uniform')
 v0_inf.fit_transform(np.random.uniform(0.05, 1.5, 2000))
-v0_prop = sp.stats.norm(loc=0, scale=1.0)
+v0_prop = sp.stats.norm(loc=0, scale=0.05)
 v0_param = Parameter(v0_inf, v0_prop)
 
 a0_inf = distfit(distr='uniform')
 a0_inf.fit_transform(np.random.uniform(0.05, 0.5, 2000))
-a0_prop = sp.stats.norm(loc=0, scale=0.1)
+a0_prop = sp.stats.norm(loc=0, scale=0.01)
 a0_param = Parameter(a0_inf, a0_prop)
 
 E_inf = distfit(distr='uniform')
 E_inf.fit_transform(np.random.uniform(0.1, 0.4, 2000))
-E_prop = sp.stats.norm(loc=0, scale=0.1)
+E_prop = sp.stats.norm(loc=0, scale=0.01)
 E_param = Parameter(E_inf, E_prop)
 
 # Model Simulation Params
@@ -84,13 +91,9 @@ thresh = 1e-5  # probability threshold for a detection
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
 resolution = 5  # lawnmower resolution (in meters)
-time_resolution = 3600 * 4  # time resolution (in seconds)
-duration = 8 * 60 * 60  # total mission time (in seconds)
-
 
 # Robot params
 vel = 0.5  # robot velocity (in meters/second)
-samp_dist = 0.5  # distance between samples (in meters)
 com_window = 120  # communication window (in seconds)
 altitude = 150.0  # flight altitude (in meters)
 
@@ -161,20 +164,21 @@ for i in range(outer_iter):
     simulator.simulate(times, experiment_name=f"{experiment_name}_iteration{i}")
 
     # Plot outcomes
-    print("Plotting simulations...")
-    simulator.plot_comms()
-    simulator.plot_all()
-    simulator.plot_world(frame_skip=3600)
+    # print("Plotting simulations...")
+    # simulator.plot_comms()
+    # simulator.plot_all()
+    # simulator.plot_world(frame_skip=3600)
 
     # Update model
     print("Updating model!")
-    obs = [float(o[-1] > thresh) for o in simulator.obs]
-    newEntrainment, newVelocity, newArea = mtt.update(times,
-                                                      simulator.coords,
+    obs = [float(o > thresh) for o in simulator.obs]
+    update_coords = [simulator.coords.T[0], simulator.coords.T[1], simulator.coords.T[2]]
+    newEntrainment, newVelocity, newArea = mtt.update(0.0,  # since MTT is stationary, just post a single time
+                                                      update_coords,
                                                       obs,
                                                       num_samps=sample_iter,
                                                       burnin=burn,
-                                                      thres=thresh)
+                                                      thresh=thresh)
     print(newEntrainment, newVelocity, newArea)
 
     # Log information
