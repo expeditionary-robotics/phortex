@@ -104,13 +104,13 @@ class Simulator(object):
         fpath = os.path.join(output_home(), f'{filename}.png')
         plt.savefig(fpath)
 
-    def plot_world(self, filename='simulation'):
+    def plot_world(self, filename='simulation', frame_skip=300):
         """Plot results w.r.t. world and save as a GIF."""
         print("Generating global simulation.")
         if self.experiment_name is not None:
             filename = f"{self.experiment_name}_{filename}"
 
-        frame_skip = 300 # number of seconds between each frame
+        frame_skip = frame_skip # number of seconds between each frame
         time_frames = list(enumerate(self.times))[::frame_skip]
 
         x = np.linspace(self.env.extent.xmin,
