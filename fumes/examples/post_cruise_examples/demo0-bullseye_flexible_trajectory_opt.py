@@ -27,7 +27,7 @@ from fumes.utils import tic, toc
 import pdb
 
 # Parameters
-experiment_name = "flexible_traj_opt_chain2"
+experiment_name = f"flexible_traj_opt_chain{np.random.randint(low=0, high=100)}"
 
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
@@ -47,9 +47,6 @@ vel = 0.5  # robot velocity (in meters/second)
 samp_dist = 0.5  # distance between samples (in meters)
 com_window = 120  # communication window (in seconds)
 altitude = 0.0
-
-
-# In[17]:
 
 
 # Create the environment
@@ -87,7 +84,7 @@ for start_time in np.arange(0, duration, step=time_resolution):
         param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
         budget=budget,
         limits=[0., 500., 0., 500.],
-        max_iters=150
+        max_iters=20
     ))
 
 planner = TrajectoryChain(planners=planners)

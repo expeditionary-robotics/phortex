@@ -30,7 +30,7 @@ from fumes.utils import tic, toc
 import pdb
 
 # Parameters
-experiment_name = "flexible_traj_opt_chain_dynamic_bullseye"
+experiment_name = f"flexible_traj_opt_chain_dynamic_bullseye{np.random.randint(low=0, high=100)}"
 
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
