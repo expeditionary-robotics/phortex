@@ -40,20 +40,20 @@ alias fumes="cd /home/${USER}/fumes; source /home/${USER}/fumes/bin/activate; so
 ## Running Python scripts on the cluster
 Navigate to the `fumes/batch` directory. If it doesn't already exist, create a `slurm` folder within the `fumes/batch` directory: `mkdir `fumes/batch/slurm`.
 
-Python scripts can be submitted as jobs by running:
+Python scripts can be submitted as jobs by running (from the `fumes` top level directory):
 ```
 bash batch/batch_python.sh fumes/examples/post_cruise_examples/demo0-bullseye_flexible_trajectory_opt.py
 ```
 The output and error files will be written the to `slurm` folder within `fumes/batch`. 
 
-NOTE: Always call the `batch_python.sh` script from within the `fumes` top-level diretory. Right now, this is the only way that the environment variables get set correctly. TODO: should fix this to let you run it from anywhere. 
+NOTE: Always call the `batch_python.sh` script from within the `fumes` top-level directory. Right now, this is the only way that the environment variables get set correctly. TODO: should fix this to let you run it from anywhere. 
 
 The `batch_python.sh` script takes commandline arguments and Python script arguments - see the documentation at the start of the file. For example, I can run:
 ```
 batch/batch_python.sh -m 10 --cores 2 --hours 4 script.py (arg2) (arg3) (arg4)
 ```
 
-This `batch_python.sh` script is a building block - it allows you to run single python scripts with command-line arguments. This can be adapted to a pytyon script with many parameter values. See the samples in `bulk_batch_predict.sh`. 
+This `batch_python.sh` script is a building block - it allows you to run single python scripts with command-line arguments. This can be adapted to a python script with many parameter values. See the samples in `bulk_batch_predict.sh`. 
 
 ## Your ~/.bashrc
 Let's add some alias and commands to your ~/.bashrc to make submitting jobs, requesting compute nodes, and checking job statuses easier:
@@ -67,7 +67,7 @@ export PYTHONPATH="${PYTHONPATH}:$HOME/fumes"
 # Ensure the correct python is used by default
 module add python/3.8.3
 
-# Slume queue and output management
+# Slurm queue and output management
 alias qs='qstat -u ${USER}'
 alias sq='squeue -u ${USER}'
 alias scall='scancel -u ${USER}'
@@ -92,4 +92,4 @@ node(){
                 # exit 1
         fi
 }
-``
+```

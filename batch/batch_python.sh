@@ -85,7 +85,7 @@ else
     NODE_LIST="newnodes,sched_mit_hill,sched_engaging_default,sched_any"
 fi
 
-echo "Running: python $args"
+echo "Running: pipenv run python $args"
 
 sbatch <<-EOT
 #!/bin/bash
@@ -97,8 +97,8 @@ sbatch <<-EOT
 #SBATCH --constraint=centos7
 #################
 #set output file names; %j will be replaced with job ID
-#SBATCH --output=slurm/%j.out
-#SBATCH --error=slurm/%j.err
+#SBATCH --output=batch/slurm/%j.out
+#SBATCH --error=batch/slurm/%j.err
 #################
 #set queue (default time is 12 hours)
 #SBATCH -p ${NODE_LIST}
@@ -120,13 +120,9 @@ sbatch <<-EOT
 #SBATCH --mail-user=${MAIL_USER}
 #################
 # Print command
-echo -e "python $args\n"
+echo -e "pipenv run python $args\n"
 # Load supporting modules
 module add python/3.8.3
-# Activate python environment
-source /home/${USER}/${ENVIRONMENT}/bin/activate
-source .env
 # Execute python script
-python $args
-deactivate
+pipenv run python $args
 EOT
