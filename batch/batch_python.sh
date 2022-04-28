@@ -78,8 +78,9 @@ args_underscore="${args// /_}"
 # MIT users do not have access to sched_engaging_default nodes
 if [ ${USER} = "geflaspo" ]; then
     NODE_LIST="newnodes,sched_mit_hill,sched_any"
-elif [ ${USER} = "seknight" ]; then
-    NODE_LIST="newnodes,sched_any"
+elif [ ${USER} = "vpreston" ]; then
+    # Note: sched_mit_darwin2 for long runs available with this user
+    NODE_LIST="newnodes,sched_any,sched_mit_hill"
 else
     NODE_LIST="newnodes,sched_mit_hill,sched_engaging_default,sched_any"
 fi
