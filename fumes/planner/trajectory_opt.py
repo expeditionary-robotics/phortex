@@ -23,7 +23,7 @@ class TrajectoryOpt(Planner):
             env_model (Model/Environment): a Model or Environemnt object,
                 supporting method `get_val`
             traj_generator (TrajectoryGenerator): a TrajectoryGenerator object
-            reward_fun (function): a function that takes a Trajectory as input
+            reward (Reward): a Reward object that takes a Trajectory as input
                 and outputs a reward score
             x0 (np.array): input parameter values that can be fed to the
                 traj_generator object to produce a trajectory, e.g.,

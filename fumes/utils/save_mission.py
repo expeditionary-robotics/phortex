@@ -11,7 +11,9 @@ def get_mission_hash(mission_name="modelsim"):
 
 
 def save_mission(mission_hash, rob, model, env=None, simulator=None):
-    filepath = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{mission_hash}.pkl")
+    dirpath = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations")
+    os.makedirs(dirpath, exist_ok=True)
+    filepath = os.path.join(dirpath, f"{mission_hash}.pkl")
     with open(filepath, "wb") as fh:
         pickle.dump({
             "robot": rob,

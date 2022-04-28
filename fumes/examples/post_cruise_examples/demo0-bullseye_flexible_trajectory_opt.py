@@ -13,7 +13,7 @@ from fumes.environment import Bullseye
 from fumes.environment.utils import xcoord_circle, ycoord_circle
 
 from fumes.trajectory import Lawnmower, Spiral
-from fumes.planner import TrajectoryOpt, TrajectoryChain,     LawnSpiralGeneratorFlexible, LawnSpiralWithStartGeneratorFlexible,     LawnSpiralGenerator
+from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralGeneratorFlexible, LawnSpiralWithStartGeneratorFlexible, LawnSpiralGenerator
 
 from fumes.model import FullyObs
 from fumes.robot import OfflineRobot
@@ -22,7 +22,7 @@ from fumes.simulator import Simulator
 from fumes.reward import SampleValues
 
 from fumes.environment import Extent
-from fumes.utils import tic, toc
+from fumes.utils import tic, toc, save_mission, load_mission, get_mission_hash
 
 import pdb
 
@@ -84,7 +84,7 @@ for start_time in np.arange(0, duration, step=time_resolution):
         param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
         budget=budget,
         limits=[0., 500., 0., 500.],
-        max_iters=20
+        max_iters=1
     ))
 
 planner = TrajectoryChain(planners=planners)
@@ -101,15 +101,32 @@ toc()
 # Create the robot
 rob = OfflineRobot(model, plan_opt, environment, vel, com_window)
 
-# Create the simulator
-simulator = Simulator(rob, environment)
 
+simulator = Simulator(rob, environment, reward=reward)
+
+##################################################
+# Save planned mission for future simulation
+##################################################
+# Save mission state
+mission_hash = get_mission_hash(experiment_name)
+save_mission(mission_hash, rob=rob, model=model, env=environment, simulator=simulator)
+print("Saved full simulation to", mission_hash)
+
+##################################################
+# Load planned mission for simulation
+##################################################
+lrob, lmodel, lenv, lsimulator = load_mission(mission_hash)
+
+##################################################
+# Run the simulation
+##################################################
 # Run the simulator
 times = np.arange(0, duration + 1)
-simulator.simulate(times, experiment_name=experiment_name)
+lsimulator.simulate(times, experiment_name=experiment_name)
+lsimulator.simulation_summary()
 
 # Plot outcomes
-simulator.plot_comms()
-simulator.plot_all()
+lsimulator.plot_comms()
+lsimulator.plot_all()
 
-simulator.plot_world()
+lsimulator.plot_world()

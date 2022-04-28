@@ -15,7 +15,7 @@ from .utils import scatter_plume_and_traj, plot_window_in_bathy
 class Simulator(object):
     """Generic discrete-time simulation class."""
 
-    def __init__(self, robot, environment, ref_global=False):
+    def __init__(self, robot, environment, ref_global=False, reward=None):
         """Initialize simulator.
 
         Args:
@@ -23,10 +23,13 @@ class Simulator(object):
             environment (Environment): an Environment object
             ref_global (bool): if True, simulation plots are
                 generated in a global reference frame.
+            reward (Reward): a reward object the encodes the task
+                Used to compute summary statistics
         """
         self.rob = robot
         self.env = environment
         self.ref_global = ref_global  # whether to plot in global reference
+        self.reward = reward # the reward object encoding the task
         self.coords = None  # coordinates visited by robot
         self.obs = None  # observations taken by robot
         self.com_coords = None  # coordinates communicated online
@@ -60,6 +63,10 @@ class Simulator(object):
             # Convert to global latlon
             self.global_coords = convert_to_latlon(self.coords, self.env.extent.origin)
             self.global_com_coords = convert_to_latlon(self.com_coords, self.env.extent.origin)
+
+    def simulation_summary(self):
+        """Generate summary statistics about the simulation."""
+        import pdb; pdb.set_trace()
 
     def plot_comms(self, filename="comm_data"):
         """Plot robot communicated signal results."""
