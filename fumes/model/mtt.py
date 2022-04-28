@@ -700,7 +700,7 @@ class MTT(ScienceModel):
                                                                      loc,
                                                                      obs,
                                                                      thresh=thresh)
-                rho = min(1, prop_samp_prob / last_samp_prob)
+                rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
                 u = np.random.uniform()
                 if u < rho:
                     naccept += 1
