@@ -599,12 +599,16 @@ class MTT(ScienceModel):
 
         P = mod.get_value(t, loc)
         detect = P > thresh
-        err = [_likelihood(d, o) for d, o in zip(detect, obs)]
-        err = np.nanprod(err)
+        err = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs)]
+        err = np.nansum(err)
         prior_E = self.entrainment.predict(Es)
+        print(prior_E, Es)
         prior_V = self.v0.predict(Vs)
+        print(prior_V, Vs)
         prior_A = self.a0.predict(As)
-        prop_samp_prob = err * (prior_E * prior_V * prior_A)
+        print(prior_A, As)
+        prop_samp_prob = err + np.log(prior_E) + np.log(prior_V) + np.log(prior_A)
+        print(prop_samp_prob)
         return prop_samp_prob
 
     def _model_sample_chain(self, mod, last_samp, t, loc, obs, thresh=1e-5):
@@ -657,15 +661,15 @@ class MTT(ScienceModel):
 
             last_samp = (Et, Vt, At)
             last_samp_prob = self._compute_sample_prob(enviro, Et, Vt, At, t,
-                                                    loc, obs, thresh=thresh)
+                                                       loc, obs, thresh=thresh)
             samples = np.zeros((num_samps, 3))
             samples[0, :] = last_samp
             naccept = 1
 
             for i in range(1, num_samps):
-                if i+1 % 10 == 0:
+                if i + 1 % 10 == 0:
                     print("Computing sample ", i)
-                    if i+1 > burnin:
+                    if i + 1 > burnin:
                         print("Saving model updated params.")
                         np.save(samples)
                         save_E = copy.deepcopy(self.entrainment)
@@ -674,27 +678,28 @@ class MTT(ScienceModel):
 
                         save_E.update(samples[burnin:, 0])
                         save_A.update(samples[burnin:, 1])
-                        save_V.update(sampels[burnin:, 2])
+                        save_V.update(samples[burnin:, 2])
 
                         json_config_dict = {"model_learned_params":
-                                {"velocity_mle": np.mean(save_V.sample(5000)),
-                                "velocity_distribution": save_V.get_attributes(),
-                                "area_mle": np.mean(save_A.sample(5000)),
-                                "area_distribution": save_A.get_attributes(),
-                                "entrainment_mle": np.mean(save_E.sample(5000)),
-                                "entrainment_distribution": save_E.get_attributes(),
-                                }}
-                        json_output_file = os.path.join(output_home(), f"{self.NAME}_update_freesze.json")
+                                            {"velocity_mle": np.mean(save_V.sample(5000)),
+                                             "velocity_distribution": save_V.get_attributes(),
+                                             "area_mle": np.mean(save_A.sample(5000)),
+                                             "area_distribution": save_A.get_attributes(),
+                                             "entrainment_mle": np.mean(save_E.sample(5000)),
+                                             "entrainment_distribution": save_E.get_attributes(),
+                                             }}
+                        json_output_file = os.path.join(
+                            output_home(), f"{self.NAME}_update_freesze.json")
                         j_fp = open(json_output_file, 'w')
                         json.dump(json_config_dict, j_fp)
                         j_fp.close()
 
                 prop_samp, prop_samp_prob = self._model_sample_chain(enviro,
-                                                                    last_samp,
-                                                                    t,
-                                                                    loc,
-                                                                    obs,
-                                                                    thresh=thresh)
+                                                                     last_samp,
+                                                                     t,
+                                                                     loc,
+                                                                     obs,
+                                                                     thresh=thresh)
                 rho = min(1, prop_samp_prob / last_samp_prob)
                 u = np.random.uniform()
                 if u < rho:
@@ -712,7 +717,7 @@ class MTT(ScienceModel):
             Et = self.entrainment.sample(num_samps)
             Vt = self.v0.sample(num_samps)
             At = self.a0.sample(num_samps)
-            
+
             best_error = 1e10
             best_option = None
             for et in Et:
@@ -1023,21 +1028,22 @@ class Crossflow(MTT):
                         v0_mean = np.mean(save_V.sample(5000))
                         a0_mean = np.mean(save_A.sample(5000))
                         alph_mean = np.mean(save_Alph.sample(5000))
-                        bet_mean = np.mean(save_Bet.sample(5000)) 
+                        bet_mean = np.mean(save_Bet.sample(5000))
 
                         print("Saved V, A, Alph, Bet: ", (v0_mean, a0_mean, alph_mean, bet_mean))
 
                         json_config_dict = {"model_learned_params":
-                                {"velocity_mle": v0_mean,
-                                "velocity_distribution": save_V.get_attributes(),
-                                "area_mle": a0_mean,
-                                "area_distribution": save_A.get_attributes(),
-                                "entrainment_alpha_mle": alph_mean,
-                                "entrainment_alpha_distribution": save_Alph.get_attributes(),
-                                "entrainment_beta_mle": bet_mean,
-                                "entrainment_beta_distribution": save_Bet.get_attributes(),
-                                }}
-                        json_output_file = os.path.join(output_home(), f"{self.NAME}_update_freeze.json")
+                                            {"velocity_mle": v0_mean,
+                                             "velocity_distribution": save_V.get_attributes(),
+                                             "area_mle": a0_mean,
+                                             "area_distribution": save_A.get_attributes(),
+                                             "entrainment_alpha_mle": alph_mean,
+                                             "entrainment_alpha_distribution": save_Alph.get_attributes(),
+                                             "entrainment_beta_mle": bet_mean,
+                                             "entrainment_beta_distribution": save_Bet.get_attributes(),
+                                             }}
+                        json_output_file = os.path.join(
+                            output_home(), f"{self.NAME}_update_freeze.json")
                         j_fp = open(json_output_file, 'w')
                         json.dump(json_config_dict, j_fp)
                         j_fp.close()
@@ -1062,7 +1068,7 @@ class Crossflow(MTT):
             Bett = self.entrainment[1].sample(num_samps)
             Vt = self.v0.sample(num_samps)
             At = self.a0.sample(num_samps)
-            
+
             best_error = 1e10
             best_option = None
             for alpht in Alpht:
@@ -1090,7 +1096,7 @@ class Crossflow(MTT):
                 print("Current best option (alph, bet, V, A): ", best_option, best_error)
             # set new param
             self.entrainment[0].update(np.random.normal(best_option[0], 0.05, 1000))
-            self.entrainment[1].update(np.random.normal(best_option[1], 0.05, 1000)) 
+            self.entrainment[1].update(np.random.normal(best_option[1], 0.05, 1000))
             self.v0.update(np.random.normal(best_option[2], 0.1, 1000))
             self.a0.update(np.random.normal(best_option[3], 0.1, 1000))
 
@@ -1146,7 +1152,7 @@ class Multimodel(Crossflow):
         #         assert(self.models[i].extent == ext)
         #     except:
         #         import pdb; pdb.set_trace()
-            # Ensure underlying models have the same name
+        # Ensure underlying models have the same name
         self.extent = ext
         # create a multiplume environment from model classes
         self.enviro = Multiplume([m.odesys for m in self.models])

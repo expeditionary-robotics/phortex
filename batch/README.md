@@ -8,7 +8,7 @@ First, clone the `fumes` repository to your home directory on the Engaging clust
   ssh -i ~/.ssh/eofe-key -tt geflaspo@eofe8.mit.edu -L 8888:localhost:8888
   ```
 2. We're using Python 3.8.3. Add this module to your Engaging node: `module add python/3.8.3`
-3. Install pipenv as a user: `pipenv install --user`
+3. Install pipenv as a user: `pip install --user pipenv`
 4. Move into the fumes directory `cd /home/[username]/fumes`
 5. Install pipenv `pipenv install` from within the fumes directory 
 6. Install the required Python packages: `pipenv install`. This instalation will take a while.
