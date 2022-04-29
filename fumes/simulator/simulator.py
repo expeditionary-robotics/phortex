@@ -66,7 +66,18 @@ class Simulator(object):
 
     def simulation_summary(self):
         """Generate summary statistics about the simulation."""
-        import pdb; pdb.set_trace()
+        json_dict = {"total_obs": len(self.obs),
+                     "total_com_obs": len(self.com_obs),
+                     "obs": self.obs.tolist(),
+                     "coords": self.coords.tolist(),
+                     "global_coords": self.global_coords.tolist(),
+                     "com_obs": self.com_obs.tolist(),
+                     "com_coords": self.com_coords.tolist(),
+                     "global_com_coords": self.global_com_coords.tolist(),
+                     "times": self.times,
+                     "plume_loc": self.env.loc,
+                     }
+        return json_dict
 
     def plot_comms(self, filename="comm_data"):
         """Plot robot communicated signal results."""

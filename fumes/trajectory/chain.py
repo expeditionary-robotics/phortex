@@ -40,7 +40,7 @@ class Chain(Trajectory):
 
     def _json_stats(self):
         """Returns a dict of trajectory information."""
-        json_dict = {"t0": self.t0,
+        json_dict = {"t0": float(self.t0),
                      "vel": self.vel,
                      "altitude": self.altitude,
                      "noise": self.noise}

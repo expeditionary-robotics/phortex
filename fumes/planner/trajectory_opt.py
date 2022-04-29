@@ -62,7 +62,7 @@ class TrajectoryOpt(Planner):
 
     def _json_stats(self):
         """Returns a dict of info about this optimizer."""
-        json_dict = {"x0": self.x0.tolist(),
+        json_dict = {"x0": self.x0,
                      "budget": self.budget,
                      "limits": self.limits,
                      "method": self.method,

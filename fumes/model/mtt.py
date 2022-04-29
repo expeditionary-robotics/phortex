@@ -129,7 +129,7 @@ class MTT(ScienceModel):
             zres = self.extent.zres
         return xrange, xres, yrange, yres, zrange, zres
 
-    def _json_stats(self, z=None, t=None):
+    def _json_stats(self):
         """Creates a dict object about model information for JSON.
 
         Args:
@@ -139,12 +139,6 @@ class MTT(ScienceModel):
         Returns:
             dict object compatible for JSON saving
         """
-        if z is None:
-            z = self.z
-
-        if t is None:
-            t = self.t
-
         json_config_dict = {"model_fixed_params":
                             {"model_type": "stationary",
                              "plume_loc": self.loc,

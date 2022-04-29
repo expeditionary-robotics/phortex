@@ -46,10 +46,13 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
                         "traj_params": json_traj_dict,
                         "traj_opt_params": json_traj_opt_dict,
                         "reward_params": json_reward_dict,
-                        "experiment_params": experiment_dict}
+                        "experiment_params": experiment_dict
+                        }
 
-    filepath = os.path.join(os.getenv("FUMES_OUTPUT"),
-                            f"simulations/{experiment_name}/exp_iter_{iter_num}.json")
+    directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    filepath = os.path.join(directory, f"exp_iter_{iter_num}.json")
     j_fp = open(filepath, 'w')
     json.dump(json_config_dict, j_fp)
     j_fp.close()
