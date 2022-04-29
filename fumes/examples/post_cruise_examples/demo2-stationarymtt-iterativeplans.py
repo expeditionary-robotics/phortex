@@ -198,6 +198,7 @@ for i in range(outer_iter):
                          traj_opt=planners[0],
                          trajectory=plan_opt,
                          reward=reward,
+                         simulation=simulator,
                          experiment_dict=experiment_dict)
 
 # Generate simple visualizations

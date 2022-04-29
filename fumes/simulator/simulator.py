@@ -64,19 +64,21 @@ class Simulator(object):
             self.global_coords = convert_to_latlon(self.coords, self.env.extent.origin)
             self.global_com_coords = convert_to_latlon(self.com_coords, self.env.extent.origin)
 
-    def simulation_summary(self):
+    def _json_stats(self):
         """Generate summary statistics about the simulation."""
         json_dict = {"total_obs": len(self.obs),
                      "total_com_obs": len(self.com_obs),
                      "obs": self.obs.tolist(),
                      "coords": self.coords.tolist(),
-                     "global_coords": self.global_coords.tolist(),
                      "com_obs": self.com_obs.tolist(),
                      "com_coords": self.com_coords.tolist(),
-                     "global_com_coords": self.global_com_coords.tolist(),
-                     "times": self.times,
-                     "plume_loc": self.env.loc,
+                     "times": self.times.tolist(),
                      }
+        if self.ref_global:
+            json_dict["ref_global"] = self.ref_global
+            json_dict["global_coords"] = self.global_coords.tolist(),
+            json_dict["global_com_coords"] = self.global_com_coords.tolist()
+
         return json_dict
 
     def plot_comms(self, filename="comm_data"):

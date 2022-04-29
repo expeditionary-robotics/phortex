@@ -31,13 +31,14 @@ def load_mission(mission_hash):
         return data["robot"], data["model"], data["environment"], data["simulator"]
 
 
-def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, experiment_dict):
+def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, simulation, experiment_dict):
     """Takes any definable experimental element and saves to JSON."""
     json_env_dict = env._json_stats()
     json_rob_dict = rob._json_stats()
     json_mod_dict = model._json_stats()
     json_traj_dict = trajectory._json_stats()
     json_reward_dict = reward._json_stats()
+    json_sim_dict = simulation._json_stats()
     json_traj_opt_dict = traj_opt._json_stats()
 
     json_config_dict = {"environment_params": json_env_dict,
@@ -46,6 +47,7 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
                         "traj_params": json_traj_dict,
                         "traj_opt_params": json_traj_opt_dict,
                         "reward_params": json_reward_dict,
+                        "simulation_params": json_sim_dict,
                         "experiment_params": experiment_dict
                         }
 
