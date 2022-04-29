@@ -66,6 +66,14 @@ def load_experiment_json(experiment_name, iter_num):
                             f"simulations/{experiment_name}/exp_iter_{iter_num}.json")
     f = open(filepath)
     data = json.load(f)
-    return data["environment_params"], data["model_params"], \
-        data["robot_params"], data["traj_params"], data["traj_opt_params"], \
-        data["reward_params"], data["experiment_params"]
+    return data
+
+
+def print_experiment_json_summary(json_dict):
+    """Prints to terminal the entries in a provided dictionary."""
+    for k, v in json_dict.items():
+        if type(v) is dict:
+            print(f"{k}:")
+            print_experiment_json_summary(v)
+        else:
+            print(f"{k}: {v}")

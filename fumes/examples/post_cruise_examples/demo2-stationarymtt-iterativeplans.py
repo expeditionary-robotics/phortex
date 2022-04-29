@@ -21,8 +21,7 @@ from fumes.reward import SampleValues
 from fumes.robot import OfflineRobot
 from fumes.simulator import Simulator
 
-from fumes.trajectory import Lawnmower, Spiral
-from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralGeneratorFlexible, LawnSpiralWithStartGeneratorFlexible, LawnSpiralGenerator
+from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralWithStartGeneratorFlexible
 from fumes.utils.save_mission import save_experiment_json
 
 
