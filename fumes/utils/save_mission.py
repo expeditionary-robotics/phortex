@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 import pickle
+import json
 
 
 def get_mission_hash(mission_name="modelsim"):
@@ -28,3 +29,38 @@ def load_mission(mission_hash):
     with open(filepath, "rb") as fh:
         data = pickle.load(fh)
         return data["robot"], data["model"], data["environment"], data["simulator"]
+
+
+def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, experiment_dict):
+    """Takes any definable experimental element and saves to JSON."""
+    json_env_dict = env._json_stats()
+    json_rob_dict = rob._json_stats()
+    json_mod_dict = model._json_stats()
+    json_traj_dict = trajectory._json_stats()
+    json_reward_dict = reward._json_stats()
+    json_traj_opt_dict = traj_opt._json_stats()
+
+    json_config_dict = {"environment_params": json_env_dict,
+                        "model_params": json_mod_dict,
+                        "robot_params": json_rob_dict,
+                        "traj_params": json_traj_dict,
+                        "traj_opt_params": json_traj_opt_dict,
+                        "reward_params": json_reward_dict,
+                        "experiment_params": experiment_dict}
+
+    filepath = os.path.join(os.getenv("FUMES_OUTPUT"),
+                            f"simulations/{experiment_name}/exp_iter_{iter_num}.json")
+    j_fp = open(filepath, 'w')
+    json.dump(json_config_dict, j_fp)
+    j_fp.close()
+
+
+def load_experiment_json(experiment_name, iter_num):
+    """Reads in any experiment JSON file."""
+    filepath = os.path.join(os.getenv("FUMES_OUTPUT"),
+                            f"simulations/{experiment_name}/exp_iter_{iter_num}.json")
+    f = open(filepath)
+    data = json.load(f)
+    return data["environment_params"], data["model_params"], \
+        data["robot_params"], data["traj_params"], data["traj_opt_params"], \
+        data["reward_params"], data["experiment_params"]

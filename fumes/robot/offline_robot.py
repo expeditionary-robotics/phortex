@@ -61,3 +61,9 @@ class OfflineRobot(Robot):
             return report_coordinate, report_observation
         else:
             return None
+
+    def _json_stats(self):
+        """Returns a dict of metadata about this robot."""
+        json_config = {"nominal_velocity": self.vel,
+                       "com_window": self.com_window}
+        return json_config

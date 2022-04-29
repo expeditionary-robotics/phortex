@@ -96,7 +96,7 @@ class StationaryMTT(Environment):
         if z is None:
             z = np.linspace(self.extent.zrange[0],
                             self.extent.zrange[1],
-                                self.extent.zres)
+                            self.extent.zres)
         return xrange, xres, yrange, yres, z
 
     def set_extent(self, xrange, xres, yrange, yres, zrange, zres):
@@ -124,6 +124,28 @@ class StationaryMTT(Environment):
         print("Gravity :", self.g)
         return (self.v0, self.a0, self.t0, self.s0, self.rho0,
                 self.entrainment, self.g)
+
+    def _json_stats(self):
+        """Creates a dict object about model information for JSON.
+
+        Returns:
+            dict object compatible for JSON saving
+        """
+        json_config_dict = {"model_type": "stationary",
+                            "plume_loc": self.loc,
+                            "extent": self.extent.get_attributes(),
+                            "temp": self.t0,
+                            "salt": self.s0,
+                            "area": self.a0,
+                            "velocity": self.v0,
+                            "density": self.rho0,
+                            "entrainment": self.entrainment,
+                            "z": self.z.tolist(),
+                            "tprof": self.tprof(self.z).tolist(),
+                            "sprof": self.sprof(self.z).tolist(),
+                            "rhoprof": self.rhoprof(self.tprof(self.z), self.sprof(self.z)).tolist(),
+                            }
+        return json_config_dict
 
     def get_maxima(self, t, z=None, xrange=None, yrange=None, xres=None,
                    yres=None, from_cache=False):
@@ -789,7 +811,7 @@ class StationaryMTT(Environment):
                 P[i, :, :] = ps[idt, :, :, idz]
             return (P, xs, ys, zs)
         else:
-            nx, ny= np.meshgrid(
+            nx, ny = np.meshgrid(
                 np.linspace(xrange[0], xrange[1], xres),
                 np.linspace(yrange[0], yrange[1], yres))
 
@@ -902,6 +924,35 @@ class CrossflowMTT(StationaryMTT):
         # Create solution
         self.solve(t=0.0)
 
+    def _json_stats(self):
+        """Creates a dict object about model information for JSON.
+
+        Returns:
+            dict object compatible for JSON saving
+        """
+        t = np.linspace(0, 3600 * 24, 25)
+        z = np.linspace(0, 200, 100)
+        json_config_dict = {"model_type": "crossflow",
+                            "plume_loc": self.loc,
+                            "extent": self.extent.get_attributes(),
+                            "temp": self.t0,
+                            "salt": self.s0,
+                            "area": self.a0,
+                            "vex": self.v0,
+                            "density": self.rho0,
+                            "entrainment": self.entrainment,
+                            "lam": self.lam,
+                            "z": z.tolist(),
+                            "s": self.s.tolist(),
+                            "t": t.tolist(),
+                            "tprof": self.tprof(self.z).tolist(),
+                            "sprof": self.sprof(self.z).tolist(),
+                            "rhoprof": self.rhoprof(self.tprof(self.z), self.sprof(self.z)).tolist(),
+                            "curfunc": self.currents(None, t).tolist(),
+                            "headfunc": self.heading(t).tolist(),
+                            }
+        return json_config_dict
+
     def solve(self, t, overwrite=False):
         """Given class parameter settings, compute the spatial solution.
 
@@ -989,7 +1040,6 @@ class CrossflowMTT(StationaryMTT):
                 # import pdb; pdb.set_trace()
                 prob.append(0.0)
 
-
         return np.asarray(prob)
 
     def q(self, t):
@@ -1075,7 +1125,6 @@ class CrossflowMTT(StationaryMTT):
                             x * np.sin(heading) + self.loc[1], z)
             R = xrotation(th / 180. * np.pi)
             Rz = zrotation(heading)
-
 
             # Apply affine transformation to points
             pts_p = pts @ R @ Rz @ T
@@ -1176,6 +1225,13 @@ class Multiplume(CrossflowMTT):
                 overwrite=overwrite,
                 seed_kernel=seed_kernel,
                 visualize=visualize)
+
+    def _json_stats(self):
+        """Return JSON dicts of model information."""
+        model_dicts = []
+        for m in self.models:
+            model_dicts.append(m._json_stats())
+        return model_dicts
 
     def get_value(self, t, loc, return_all=False, from_cache=False,
                   cache_interp="gp"):

@@ -38,6 +38,18 @@ class Chain(Trajectory):
 
         self._create_global_frame()
 
+    def _json_stats(self):
+        """Returns a dict of trajectory information."""
+        json_dict = {"t0": self.t0,
+                     "vel": self.vel,
+                     "altitude": self.altitude,
+                     "noise": self.noise}
+
+        for i, traj in enumerate(self.traj_list):
+            json_dict[f"traj{i}_params"] = traj._json_stats()
+
+        return json_dict
+
     def _create_global_frame(self):
         """Creates the chain grid points in the global frame"""
         all_coords_x = []

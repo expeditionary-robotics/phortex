@@ -46,6 +46,19 @@ class Lawnmower(Trajectory):
 
         self._length = None
 
+    def _json_stats(self):
+        """Returns a dict of trajectory information."""
+        json_dict = {"t0": self.t0,
+                     "vel": self.vel,
+                     "lh": self.lh,
+                     "lw": self.lw,
+                     "resolution": self.resolution,
+                     "noise": self.noise,
+                     "origin": self.origin,
+                     "orientation": self.orientation,
+                     "altitude": self.altitude}
+        return json_dict
+    
     def _create_local_frame(self):
         """Creates the lawnmower grid points in the local frame."""
         num_passes = int(self.lh / self.resolution)

@@ -23,6 +23,7 @@ from fumes.simulator import Simulator
 
 from fumes.trajectory import Lawnmower, Spiral
 from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralGeneratorFlexible, LawnSpiralWithStartGeneratorFlexible, LawnSpiralGenerator
+from fumes.utils.save_mission import save_experiment_json
 
 
 # Set meta/saving parameters
@@ -182,6 +183,21 @@ for i in range(outer_iter):
     print(newEntrainment, newVelocity, newArea)
 
     # Log information
-    
+    experiment_dict = {"experiment_iteration": i,
+                       "total_experiment_iterations": outer_iter,
+                       "total_samples": len(obs),
+                       "total_in_plume_samples": np.nansum(obs),
+                       "update_model_params_E": newEntrainment,
+                       "update_model_params_V": newVelocity,
+                       "update_model_params_A": newArea}
+    save_experiment_json(experiment_name,
+                         iter_num=i,
+                         rob=rob,
+                         model=mtt,
+                         env=env,
+                         traj_opt=planners[0],
+                         trajectory=plan_opt,
+                         reward=reward,
+                         experiment_dict=experiment_dict)
 
 # Generate simple visualizations

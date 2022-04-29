@@ -129,16 +129,22 @@ class MTT(ScienceModel):
             zres = self.extent.zres
         return xrange, xres, yrange, yres, zrange, zres
 
-    def save_model_metadata(self, overwrite=False, from_multi=None):
-        """Creates a JSON file with metadata of the model.
+    def _json_stats(self, z=None, t=None):
+        """Creates a dict object about model information for JSON.
 
         Args:
-            overwrite (bool): whether to overwrite existing file
-            from_multi (None or string): pass multiplume name into string
+            z (array of floats): heights to save
+            t (array of floats): times to save
 
         Returns:
-            saves JSON file to disk.
+            dict object compatible for JSON saving
         """
+        if z is None:
+            z = self.z
+
+        if t is None:
+            t = self.t
+
         json_config_dict = {"model_fixed_params":
                             {"model_type": "stationary",
                              "plume_loc": self.loc,
@@ -168,6 +174,19 @@ class MTT(ScienceModel):
                             {"prediction_samples": self.prediction_num_samps,
                              },
                             }
+        return json_config_dict
+
+    def save_model_metadata(self, overwrite=False, from_multi=None):
+        """Creates a JSON file with metadata of the model.
+
+        Args:
+            overwrite (bool): whether to overwrite existing file
+            from_multi (None or string): pass multiplume name into string
+
+        Returns:
+            saves JSON file to disk.
+        """
+        json_config_dict = self._json_stats()
         if from_multi is not None:
             json_output_file = os.path.join(output_home(),
                                             f"{self.NAME}_multipart_{from_multi}.json")
@@ -821,19 +840,22 @@ class Crossflow(MTT):
         return (self.v0, self.a0, self.t0, self.s0, self.rho0,
                 self.entrainment, self.g)
 
-    def save_model_metadata(self, overwrite=False, from_multi=None):
-        """Creates a JSON file with metadata of the model.
+    def _json_stats(self, z=None, t=None):
+        """Creates a dict object about model information for JSON.
 
         Args:
-            overwrite (bool): whether to overwrite existing file
-            from_multi (None or string): name of multiplume class
+            z (array of floats): heights to save
+            t (array of floats): times to save
 
         Returns:
-            saves JSON file to disk.
+            dict object compatible for JSON saving
         """
-        z = np.linspace(0, 100, 100)
-        t = np.linspace(0, 12 * 3600, 24)
-        # TODO: change current and heading interface when uncertainty available
+        if z is None:
+            z = self.z
+
+        if t is None:
+            t = self.t
+
         json_config_dict = {"model_fixed_params":
                             {"model_type": "crossflow",
                              "plume_loc": self.loc,
@@ -869,6 +891,22 @@ class Crossflow(MTT):
                             {"prediction_samples": self.prediction_num_samps,
                              },
                             }
+        return json_config_dict
+
+    def save_model_metadata(self, overwrite=False, from_multi=None):
+        """Creates a JSON file with metadata of the model.
+
+        Args:
+            overwrite (bool): whether to overwrite existing file
+            from_multi (None or string): name of multiplume class
+
+        Returns:
+            saves JSON file to disk.
+        """
+        z = np.linspace(0, 100, 100)
+        t = np.linspace(0, 12 * 3600, 24)
+        # TODO: change current and heading interface when uncertainty available
+        json_config_dict = self._json_stats(z, t)
         if from_multi is not None:
             json_output_file = os.path.join(output_home(),
                                             f"{self.NAME}_multipart_{from_multi}.json")
@@ -1186,6 +1224,13 @@ class Multimodel(Crossflow):
         for m in self.models:
             m.solve(t=t, overwrite=overwrite)
         self.enviro = Multiplume([m.odesys for m in self.models])
+
+    def _json_stats(self):
+        """Return JSON dicts of model information."""
+        model_dicts = []
+        for m in self.models:
+            model_dicts.append(m._json_stats())
+        return model_dicts
 
     def save_model_metadata(self, overwrite=False):
         """Save each model's metadata to file.
