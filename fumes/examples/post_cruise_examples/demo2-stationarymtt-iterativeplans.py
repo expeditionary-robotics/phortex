@@ -35,9 +35,9 @@ if code_test is True:
     burn = 1  # number of burn-in samples
     plan_iter = 1  # planning iterations
     outer_iter = 2  # number of traj and model update loops
-    samp_dist = 5.0  # distance between samples (in meters)
-    time_resolution = 1800  # time resolution (in seconds)
-    duration = 2 * 1800  # total mission time (in seconds)
+    samp_dist = 10.0  # distance between samples (in meters)
+    time_resolution = 100  # time resolution (in seconds)
+    duration = 2 * 100  # total mission time (in seconds)
 
 else:
     sample_iter = 100  # number of samples to search over

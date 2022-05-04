@@ -1,11 +1,7 @@
-"""Plot a saved simulation by mission hash.
+"""Reads in a JSON experiment file and shows access examples."""
 
-Example usage:
-    python fumes/examples/post_cruise_examples/demo3-plot-from-saved-sim.py -m crossflow_gp_cache_14112021-15:08:40
-"""
-import os
-import argparse
 import numpy as np
+import dill as pickle
 from fumes.utils import tic, toc
 from fumes.utils.save_mission import load_experiment_json, \
     print_experiment_json_summary
@@ -27,6 +23,7 @@ traj_opt_dict = json_dict["traj_opt_params"]
 reward_dict = json_dict["reward_params"]
 sim_dict = json_dict["simulation_params"]
 exp_dict = json_dict["experiment_params"]
+pickle_dict = json_dict["pickle_targets"]
 
 # Answer simple queries from JSON
 print_dict = {"num_obs": exp_dict["total_samples"],  # total obs
@@ -52,3 +49,7 @@ coord_dists = np.asarray([np.sqrt((l[0] - vent_loc[0])**2 + (l[1] - vent_loc[1])
 dist_mask = coord_dists > dist_query
 further_obs = path_obs[dist_mask]
 print(f"num obs over {dist_query}m away: {len(further_obs)}")
+
+# Recreate objects from pickles; useful for visualization
+simulator = pickle.load(open(pickle_dict["sim_path"], "rb"))
+simulator.plot_all()

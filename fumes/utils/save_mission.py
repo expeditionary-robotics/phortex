@@ -1,7 +1,7 @@
 """Utility file for saving and loading a mission."""
 import os
 from datetime import datetime
-import pickle
+import dill as pickle
 import json
 
 
@@ -47,13 +47,13 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
     json_traj_opt_dict = traj_opt._json_stats()
 
     # Save a pickle snapshot of everything
-    pickle.dump(env, os.path.join(directory, f"env_{iter_num}.pkl"))
-    pickle.dump(rob, os.path.join(directory, f"rob_{iter_num}.pkl"))
-    pickle.dump(model, os.path.join(directory, f"mod_{iter_num}.pkl"))
-    pickle.dump(trajectory, os.path.join(directory, f"traj_{iter_num}.pkl"))
-    pickle.dump(traj_opt, os.path.join(directory, f"traj_opt_{iter_num}.pkl"))
-    pickle.dump(reward, os.path.join(directory, f"reward_{iter_num}.pkl"))
-    pickle.dump(simulation, os.path.join(directory, f"sim_{iter_num}.pkl"))
+    pickle.dump(env, open(os.path.join(directory, f"env_{iter_num}.pkl"), "wb"))
+    pickle.dump(rob, open(os.path.join(directory, f"rob_{iter_num}.pkl"), "wb"))
+    pickle.dump(model, open(os.path.join(directory, f"mod_{iter_num}.pkl"), "wb"))
+    pickle.dump(trajectory, open(os.path.join(directory, f"traj_{iter_num}.pkl"), "wb"))
+    pickle.dump(traj_opt, open(os.path.join(directory, f"traj_opt_{iter_num}.pkl"), "wb"))
+    pickle.dump(reward, open(os.path.join(directory, f"reward_{iter_num}.pkl"), "wb"))
+    pickle.dump(simulation, open(os.path.join(directory, f"sim_{iter_num}.pkl"), "wb"))
 
     # Save the pickle locations for easy access later
     json_pickle_dict = {"env_path": os.path.join(directory, f"env_{iter_num}.pkl"),
@@ -62,7 +62,8 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
                         "traj_path": os.path.join(directory, f"traj_{iter_num}.pkl"),
                         "traj_opt_path": os.path.join(directory, f"traj_opt_{iter_num}.pkl"),
                         "reward_path": os.path.join(directory, f"reward_{iter_num}.pkl"),
-                        "sim_path": os.path.join(directory, f"sim_{iter_num}.pkl"), }
+                        "sim_path": os.path.join(directory, f"sim_{iter_num}.pkl"),
+                        }
 
     # Create the JSON file of everything
     json_config_dict = {"environment_params": json_env_dict,
@@ -90,7 +91,6 @@ def load_experiment_json(experiment_name, iter_num):
     f = open(filepath)
     data = json.load(f)
     return data
-
 
 def print_experiment_json_summary(json_dict):
     """Prints to terminal the entries in a provided dictionary."""
