@@ -7,6 +7,7 @@ import matplotlib.animation as animation
 import os
 import copy
 import yaml
+import pickle
 
 from fumes.utils import data_home, output_home, tic, toc, convert_to_latlon
 from .utils import scatter_plume_and_traj, plot_window_in_bathy
@@ -66,6 +67,7 @@ class Simulator(object):
 
     def _json_stats(self):
         """Generate summary statistics about the simulation."""
+
         json_dict = {"total_obs": len(self.obs),
                      "total_com_obs": len(self.com_obs),
                      "obs": self.obs.tolist(),

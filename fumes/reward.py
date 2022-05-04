@@ -50,7 +50,8 @@ class SampleValues(Reward):
 
     def _json_stats(self):
         """Returns dict of reward info."""
-        json_dict = {"sampling_params": self.params,
+        json_dict = {"reward_func": "SampleValues",
+                     "sampling_params": self.params,
                      "is_cost": self.is_cost}
         return json_dict
 
@@ -97,7 +98,8 @@ class SampleUCB(Reward):
 
     def _json_stats(self):
         """Returns dict of reward info."""
-        json_dict = {"sampling_params": self.params,
+        json_dict = {"reward_func": "SampleUCB",
+                     "sampling_params": self.params,
                      "is_cost": self.is_cost,
                      "c": self.c}
         return json_dict
