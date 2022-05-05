@@ -7,7 +7,6 @@ import matplotlib.animation as animation
 import os
 import copy
 import yaml
-import pickle
 
 from fumes.utils import data_home, output_home, tic, toc, convert_to_latlon
 from .utils import scatter_plume_and_traj, plot_window_in_bathy
@@ -30,7 +29,7 @@ class Simulator(object):
         self.rob = robot
         self.env = environment
         self.ref_global = ref_global  # whether to plot in global reference
-        self.reward = reward # the reward object encoding the task
+        self.reward = reward  # the reward object encoding the task
         self.coords = None  # coordinates visited by robot
         self.obs = None  # observations taken by robot
         self.com_coords = None  # coordinates communicated online
@@ -132,7 +131,7 @@ class Simulator(object):
         if self.experiment_name is not None:
             filename = f"{self.experiment_name}_{filename}"
 
-        frame_skip = frame_skip # number of seconds between each frame
+        frame_skip = frame_skip  # number of seconds between each frame
         time_frames = list(enumerate(self.times))[::frame_skip]
 
         x = np.linspace(self.env.extent.xmin,
@@ -207,9 +206,8 @@ class Simulator(object):
             # Get the most recent snapshot
             snap = self.env.get_snapshot(t)
 
-
             for c in cf.collections:
-                c.remove() # removes only the contours, leaves the rest intact
+                c.remove()  # removes only the contours, leaves the rest intact
 
             cf = ax.contourf(xm, ym, snap,
                              vmin=np.nanmin(self.obs), vmax=np.nanmax(self.obs),
@@ -226,12 +224,74 @@ class Simulator(object):
             s2.set_array(self.obs[:i])
             return [cf, s1, s2]
 
+        print("Starting animation...")
         tic()
         anim = animation.FuncAnimation(fig=fig, func=animate, init_func=init,
                                        frames=len(time_frames), repeat=True)
 
         fpath = os.path.join(output_home(), f'{filename}.gif')
-        anim.save(fpath, writer='imagemagick', fps=10)
+        plt.rcParams["animation.convert_path"] = r'/usr/bin/convert'
+        # anim.save(fpath, writer='imagemagick', fps=10)
+        anim.save(fpath, writer=animation.FFMpegWriter())
+        toc()
+
+    def plot_world_hpc(self, filename='simulation', frame_skip=300):
+        """Plot results w.r.t. world and save as a GIF."""
+        print("Generating global simulation.")
+        if self.experiment_name is not None:
+            filename = f"{filename}"
+
+        time_frames = list(enumerate(self.times))[::frame_skip]
+
+        x = np.linspace(self.env.extent.xmin,
+                        self.env.extent.xmax,
+                        self.env.extent.xres)
+        y = np.linspace(self.env.extent.ymin,
+                        self.env.extent.ymax,
+                        self.env.extent.yres)
+        z = np.linspace(self.env.extent.zmin,
+                        self.env.extent.zmax,
+                        self.env.extent.zres)
+        xyz = np.hstack([x, y, z])
+
+        if self.ref_global:
+            # Convert to global latlon
+            xyz = convert_to_latlon(xyz, self.env.extent.origin)
+            x = xyz[:, 0]
+            y = xyz[:, 1]
+            z = xyz[:, 2]
+
+        # Initialize lists of locations
+        xm, ym = np.meshgrid(x, y)
+        zref = self.coords[0][-1]
+
+        tic()
+        for i in range(len(time_frames)):
+            t = time_frames[i][1]
+            j = time_frames[i][0]
+            fig, ax = plt.subplots(1, 1)
+            ax.set_xlim([self.env.extent.xmin, self.env.extent.xmax])
+            ax.set_ylim([self.env.extent.ymin, self.env.extent.ymax])
+            ax.axis('equal')
+            ax.axis('off')
+            snap = self.env.get_snapshot(t, z=[zref])
+            cf = ax.contourf(xm, ym, snap[0], vmin=np.nanmin(self.obs),
+                             vmax=np.nanmax(self.obs), zorder=0)
+            if self.ref_global:
+                coords = self.global_coords
+            else:
+                coords = self.coords
+            s1 = ax.scatter(coords[:j, 0], coords[:j, 1], c='r', s=20,
+                            vmin=np.nanmin(self.obs), vmax=np.nanmax(self.obs),
+                            zorder=10)
+
+            # Overlay sample values
+            s2 = ax.scatter(coords[:j, 0], coords[:j, 1],
+                            c=self.obs[:j], cmap='viridis', s=2, alpha=0.5,
+                            vmin=np.nanmin(self.obs), vmax=np.nanmax(self.obs),
+                            zorder=20)
+            fpath = os.path.join(f'{filename}_frame{i}_time{t}.png')
+            plt.savefig(fpath)
         toc()
 
     def plot_world3d(self, times=None, filename='simulation3d', bathy_file=None):

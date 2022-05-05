@@ -2,6 +2,7 @@
 
 import numpy as np
 import dill as pickle
+import os
 from fumes.utils import tic, toc
 from fumes.utils.save_mission import load_experiment_json, \
     print_experiment_json_summary
@@ -52,4 +53,5 @@ print(f"num obs over {dist_query}m away: {len(further_obs)}")
 
 # Recreate objects from pickles; useful for visualization
 simulator = pickle.load(open(pickle_dict["sim_path"], "rb"))
-simulator.plot_all()
+filepath = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
+simulator.plot_world_hpc(frame_skip=10, filename=os.path.join(filepath, f"loop{iter_num}"))
