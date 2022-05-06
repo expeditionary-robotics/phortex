@@ -54,6 +54,20 @@ class LawnmowerWithStart(Lawnmower):
 
         self._length = None
 
+    def _json_stats(self):
+        """Returns a dict of trajectory information."""
+        json_dict = {"t0": float(self.t0),
+                     "vel": self.vel,
+                     "lh": self.lh,
+                     "lw": self.lw,
+                     "resolution": self.resolution,
+                     "noise": self.noise,
+                     "origin": self.origin,
+                     "orientation": self.orientation,
+                     "altitude": self.altitude,
+                     "start_point": self.start_point}
+        return json_dict
+
     def _create_global_frame(self):
         """Creates the lawnmower grid points w/start in the global frame"""
         # Generate the lawnmower global frame
@@ -114,6 +128,20 @@ class SpiralWithStart(Spiral):
         self._create_global_frame()
 
         self._length = None
+
+    def _json_stats(self):
+        """Returns a dict of trajectory information."""
+        json_dict = {"t0": float(self.t0),
+                     "vel": self.vel,
+                     "lh": self.lh,
+                     "lw": self.lw,
+                     "resolution": self.resolution,
+                     "noise": self.noise,
+                     "origin": self.origin,
+                     "orientation": self.orientation,
+                     "altitude": self.altitude,
+                     "start_point": self.start_point}
+        return json_dict
 
     def _create_global_frame(self):
         """Creates the lawnmower grid points w/start in the global frame"""

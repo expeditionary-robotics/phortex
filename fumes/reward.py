@@ -48,6 +48,13 @@ class SampleValues(Reward):
         self.params = sampling_params
         self.is_cost = is_cost
 
+    def _json_stats(self):
+        """Returns dict of reward info."""
+        json_dict = {"reward_func": "SampleValues",
+                     "sampling_params": self.params,
+                     "is_cost": self.is_cost}
+        return json_dict
+
     def eval(self, trajectory, env_model, from_cache=False):
         """Evaluate the reward of a trajectory and model or environment.
 
@@ -73,6 +80,7 @@ class SampleValues(Reward):
             return -1.0 * reward
         return reward
 
+
 class SampleUCB(Reward):
     """Counts the total UCB value of the samples."""
 
@@ -86,6 +94,15 @@ class SampleUCB(Reward):
         """
         self.params = sampling_params
         self.is_cost = is_cost
+        self.c = c
+
+    def _json_stats(self):
+        """Returns dict of reward info."""
+        json_dict = {"reward_func": "SampleUCB",
+                     "sampling_params": self.params,
+                     "is_cost": self.is_cost,
+                     "c": self.c}
+        return json_dict
 
     def eval(self, trajectory, env_model, from_cache=False):
         """Evaluate the reward of a trajectory and model or environment.
@@ -109,7 +126,7 @@ class SampleUCB(Reward):
             samples[:, 1], samples[:, 2], samples[:, 3]), from_cache=from_cache)
 
         # UCB reward
-        reward = 1e4 * (float(mean.sum()) + self.c*float(var.sum()))
+        reward = 1e4 * (float(mean.sum()) + self.c * float(var.sum()))
         if self.is_cost:
             return -1.0 * reward
         return reward

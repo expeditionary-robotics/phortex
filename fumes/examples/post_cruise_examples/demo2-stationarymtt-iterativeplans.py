@@ -21,8 +21,8 @@ from fumes.reward import SampleValues
 from fumes.robot import OfflineRobot
 from fumes.simulator import Simulator
 
-from fumes.trajectory import Lawnmower, Spiral
-from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralGeneratorFlexible, LawnSpiralWithStartGeneratorFlexible, LawnSpiralGenerator
+from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralWithStartGeneratorFlexible
+from fumes.utils.save_mission import save_experiment_json
 
 
 # Set meta/saving parameters
@@ -31,13 +31,13 @@ experiment_name = "stationarymtt_iterativeplans"
 
 # Set iteration parameters
 if code_test is True:
-    sample_iter = 10  # number of samples to search over
+    sample_iter = 5  # number of samples to search over
     burn = 1  # number of burn-in samples
     plan_iter = 1  # planning iterations
     outer_iter = 2  # number of traj and model update loops
-    samp_dist = 5.0  # distance between samples (in meters)
-    time_resolution = 3600  # time resolution (in seconds)
-    duration = 2 * 3600  # total mission time (in seconds)
+    samp_dist = 10.0  # distance between samples (in meters)
+    time_resolution = 100  # time resolution (in seconds)
+    duration = 2 * 100  # total mission time (in seconds)
 
 else:
     sample_iter = 100  # number of samples to search over
@@ -182,6 +182,22 @@ for i in range(outer_iter):
     print(newEntrainment, newVelocity, newArea)
 
     # Log information
+    experiment_dict = {"experiment_iteration": i,
+                       "total_experiment_iterations": outer_iter,
+                       "total_samples": len(obs),
+                       "in_plume_thresh": thresh,
+                       "total_in_plume_samples": np.nansum(obs),
+                       "portion_in_plume_samples": float(np.nansum(obs) / len(obs))}
     
+    save_experiment_json(experiment_name,
+                         iter_num=i,
+                         rob=rob,
+                         model=mtt,
+                         env=env,
+                         traj_opt=planners[0],
+                         trajectory=plan_opt,
+                         reward=reward,
+                         simulation=simulator,
+                         experiment_dict=experiment_dict)
 
 # Generate simple visualizations

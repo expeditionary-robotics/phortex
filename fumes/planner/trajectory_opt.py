@@ -60,6 +60,17 @@ class TrajectoryOpt(Planner):
         path = os.path.join(os.getenv("FUMES_OUTPUT"), "planning")
         os.makedirs(path, exist_ok=True)
 
+    def _json_stats(self):
+        """Returns a dict of info about this optimizer."""
+        json_dict = {"x0": self.x0,
+                     "budget": self.budget,
+                     "limits": self.limits,
+                     "method": self.method,
+                     "param_bounds": self.param_bounds,
+                     "max_iters": self.max_iters,
+                     "tol": self.tol}
+        return json_dict
+    
     def get_plan(self, soft_origin=None, soft_com=None, from_cache=False):
         """Get a plan by minimizing a cost funciton.
 
