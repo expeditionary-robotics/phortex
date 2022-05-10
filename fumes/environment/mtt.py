@@ -783,7 +783,6 @@ class StationaryMTT(Environment):
 
         xrange, xres, yrange, yres, z = \
             self.set_extent_with_z(xrange, xres, yrange, yres, z)
-        print(z)
         P = np.zeros((len(z), xres, yres))
 
         if return_all:

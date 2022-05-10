@@ -27,13 +27,13 @@ from fumes.utils.save_mission import save_experiment_json
 
 # Set meta/saving parameters
 code_test = True
-experiment_name = "stationarymtt_iterativeplans"
+experiment_name = f"stationarymtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 
 # Set iteration parameters
-if code_test is True:
+if code_test:
     sample_iter = 5  # number of samples to search over
     burn = 1  # number of burn-in samples
-    plan_iter = 1  # planning iterations
+    plan_iter = 5  # planning iterations
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 10.0  # distance between samples (in meters)
     time_resolution = 100  # time resolution (in seconds)
@@ -117,13 +117,16 @@ mtt = MTT(plume_loc=(0, 0, 0), extent=extent, z=z, tprof=tprof, sprof=sprof, rho
 
 for i in range(outer_iter):
     print("Starting to optimize...")
+    # Append meta-iteration to the experiment name
+    exp_name = f"{experiment_name}_metaloop{i}"
+
     # Build trajectory optimizer
     planners = []
     budget = time_resolution * vel  # distance budget per leg
     for start_time in np.arange(0, duration, step=time_resolution):
         # Create the base trajectory generator object with a temporary start_point
         # We will reset this later in the chaining process.
-        print("Trajectory generator generating...")
+        print(f"Initializing trajectory generator at time {start_time}...")
         traj_generator = LawnSpiralWithStartGeneratorFlexible(
             t0=start_time, vel=vel, alt=altitude, start_point=(0., 0.),
             traj_type=traj_type, res=resolution)
@@ -132,7 +135,6 @@ for i in range(outer_iter):
         xm, ym, zm = mtt.get_maxima(start_time, z=[altitude])
 
         # Create planner
-        print("Trajectory optimizer generating...")
         planners.append(TrajectoryOpt(
             mtt,
             traj_generator,
@@ -142,8 +144,10 @@ for i in range(outer_iter):
             param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
             budget=budget,
             limits=[-500., 500., -500., 500.],
-            max_iters=plan_iter
+            max_iters=plan_iter,
+            experiment_name=exp_name
         ))
+        print("Done.")
 
     print("Planners created!")
     planner = TrajectoryChain(planners=planners)
@@ -188,7 +192,7 @@ for i in range(outer_iter):
                        "in_plume_thresh": thresh,
                        "total_in_plume_samples": np.nansum(obs),
                        "portion_in_plume_samples": float(np.nansum(obs) / len(obs))}
-    
+
     save_experiment_json(experiment_name,
                          iter_num=i,
                          rob=rob,

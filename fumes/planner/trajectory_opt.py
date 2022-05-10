@@ -4,6 +4,8 @@ from scipy.optimize import minimize
 
 import os
 
+import matplotlib.pyplot as plt
+
 from fumes.utils import tic, toc
 from fumes.simulator.utils import visualize_and_save_traj
 
@@ -16,7 +18,7 @@ class TrajectoryOpt(Planner):
     def __init__(self, env_model, traj_generator, reward, x0, budget=None,
                  limits=[0., 1000., 0., 1000.], param_bounds=None,
                  param_names=None, max_iters=30, tol=1e-8,
-                 method="trust-constr"):
+                 method="trust-constr", experiment_name=None):
         """ Initialize trajectory optmizer.
 
         Args:
@@ -40,6 +42,8 @@ class TrajectoryOpt(Planner):
             tol (float): algorithm convergence tolerance
             method (str): optimization method, one of:
                 "SLSQP", "trust-constr", "BFGS", "basinhopping"
+            experiment_name (str): the name of the experiment (optional), used
+                to name output files.
         """
         self.env_model = env_model
         self.traj_generator = traj_generator
@@ -52,13 +56,18 @@ class TrajectoryOpt(Planner):
         self.param_names = param_names
         self.max_iters = max_iters
         self.tol = tol
+        self.experiment_name = experiment_name
+        self.reward_history = []
+
+        if self.experiment_name is None:
+            self.experiment_name = "temp"
         self.id = ""
 
         self.neval = 1
 
         # Generate planning path, if needed
-        path = os.path.join(os.getenv("FUMES_OUTPUT"), "planning")
-        os.makedirs(path, exist_ok=True)
+        self.path = os.path.join(os.getenv("FUMES_OUTPUT"), "planning", self.experiment_name)
+        os.makedirs(self.path, exist_ok=True)
 
     def _json_stats(self):
         """Returns a dict of info about this optimizer."""
@@ -70,7 +79,7 @@ class TrajectoryOpt(Planner):
                      "max_iters": self.max_iters,
                      "tol": self.tol}
         return json_dict
-    
+
     def get_plan(self, soft_origin=None, soft_com=None, from_cache=False):
         """Get a plan by minimizing a cost funciton.
 
@@ -154,14 +163,14 @@ class TrajectoryOpt(Planner):
         #### Solve optimization ####
         ############################
 
-        print(">>>>>Generator time.")
-        tic()
-        traj = self.traj_generator.generate(*self.x0)
-        toc()
-        tic()
-        test = self.reward.eval(traj, self.env_model, from_cache=from_cache)
-        toc()
-        print("<<<<<Done.")
+        # print(">>>>>Generator time.")
+        # tic()
+        # traj = self.traj_generator.generate(*self.x0)
+        # toc()
+        # tic()
+        # test = self.reward.eval(traj, self.env_model, from_cache=from_cache)
+        # toc()
+        # print("<<<<<Done.")
 
         if self.max_iters is None:
             options = {'disp': True}
@@ -205,18 +214,31 @@ class TrajectoryOpt(Planner):
         return self.traj_generator.generate(*res.x)
 
     def _callback(self, x, *args):
+        """This callback is called during every iteration of optimization."""
+        # rew = self.reward.eval(self.traj_generator.generate(*x), self.env_model)
+        # import pdb; pdb.set_trace()
+        rew = args[0].fun
+        self.reward_history.append(rew)
+        plt.plot(range(len(self.reward_history)), self.reward_history)
+        plt.xlabel("Iterations")
+        plt.ylabel("(Negative) Reward")
+        plt.title("Optimization progress (should go down)")
+        plt.savefig(os.path.join(self.path, f"training_progress_{self.id}plot.png"))
+        plt.close()
+
         print(
             # f"n:{self.neval}\t Value:{self.reward.eval(self.traj_generator.generate(*x), self.env_model)}")
-            f"n:{self.neval}")
+            f"n:{self.neval}\t Value:{rew}")
+            # f"n:{self.neval}")
         if not (self.neval % 10):
             print(
                 f"\t n:{self.neval}\t Value:{self.reward.eval(self.traj_generator.generate(*x), self.env_model)}")
-                # f"n:{self.neval}")
             print("Saving mission checkpoint.")
+
             traj = self.traj_generator.generate(*x)
             visualize_and_save_traj(
                 traj,
                 self.env_model.extent,
-                traj_name=os.path.join(os.getenv("FUMES_OUTPUT"), f"planning/temp_{self.id}iter{self.neval}"))
+                traj_name=os.path.join(self.path, f"temp_{self.id}iter{self.neval}"))
             print("Done.")
         self.neval += 1
