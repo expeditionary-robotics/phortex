@@ -31,7 +31,7 @@ experiment_name = f"stationarymtt_iterativeplans_seed{np.random.randint(low=0, h
 
 # Set iteration parameters
 if code_test:
-    sample_iter = 5  # number of samples to search over
+    sample_iter = 20  # number of samples to search over
     burn = 1  # number of burn-in samples
     plan_iter = 5  # planning iterations
     outer_iter = 2  # number of traj and model update loops
@@ -119,6 +119,7 @@ for i in range(outer_iter):
     print("Starting to optimize...")
     # Append meta-iteration to the experiment name
     exp_name = f"{experiment_name}_metaloop{i}"
+    mtt.experiment_name = exp_name
 
     # Build trajectory optimizer
     planners = []
