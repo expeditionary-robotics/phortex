@@ -33,9 +33,10 @@ class MTT(ScienceModel):
 
     def __init__(self, extent, plume_loc, z, tprof, sprof, rhoprof, vex=0.1, area=0.1,
                  density=1000, salt=34.608, temp=300, E=0.255,
-                 dive="simulated"):
+                 dive="simulated", experiment_name="temp"):
         """Initializes an MTT model class."""
         self.NAME = f"StationaryModel{random_str()}_{dive}"
+        self.experiment_name = experiment_name
 
         self.extent = extent  # range and resolution of model extent
         self.loc = plume_loc  # (easting, northing, height) plume source coords
@@ -141,6 +142,7 @@ class MTT(ScienceModel):
         """
         json_config_dict = {"model_fixed_params":
                             {"model_type": "stationary",
+                             "model_name": self.NAME,
                              "plume_loc": self.loc,
                              "extent": self.extent.get_attributes(),
                              "temp": self.t0,
@@ -662,6 +664,11 @@ class MTT(ScienceModel):
         self.update_thresh = thresh
         self.used_grid = use_grid
 
+        # create a place to save model checkpoints
+        filepath = os.path.join(output_home(), f"modeling/{self.experiment_name}")
+        if not os.path.exists(filepath):
+            os.mkdir(filepath)
+
         # create clean environment to perform work in
         enviro = copy.deepcopy(self.odesys)
         enviro._model = {}
@@ -678,10 +685,19 @@ class MTT(ScienceModel):
             samples = np.zeros((num_samps, 3))
             samples[0, :] = last_samp
             naccept = 1
+            accept_tracker = [naccept]
 
             for i in range(1, num_samps):
                 if i + 1 % 10 == 0:
                     print("Computing sample ", i)
+                    plt.plot(accept_tracker)
+                    plt.savefig(os.path.join(filepath, "num_accepted_samples.png"))
+                    plt.plot(samples[:, 0])
+                    plt.savefig(os.path.join(filepath, "entrainment_samples.png"))
+                    plt.plot(samples[:, 1])
+                    plt.savefig(os.path.join(filepath, "area_samples.png"))
+                    plt.plot(samples[:, 2])
+                    plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     if i + 1 > burnin:
                         print("Saving model updated params.")
                         np.save(samples)
@@ -702,7 +718,7 @@ class MTT(ScienceModel):
                                              "entrainment_distribution": save_E.get_attributes(),
                                              }}
                         json_output_file = os.path.join(
-                            output_home(), f"{self.NAME}_update_freesze.json")
+                            output_home(), f"{self.NAME}_update_freeze.json")
                         j_fp = open(json_output_file, 'w')
                         json.dump(json_config_dict, j_fp)
                         j_fp.close()
@@ -719,6 +735,7 @@ class MTT(ScienceModel):
                     naccept += 1
                     last_samp_prob = prop_samp_prob
                     last_samp = prop_samp
+                accept_tracker.append(naccept)
                 samples[i, :] = last_samp
             print("Number of accepted samples in chain:", naccept)
             # set new param
@@ -763,7 +780,7 @@ class Crossflow(MTT):
 
     def __init__(self, extent, plume_loc, s, curfunc, headfunc, tprof, sprof, rhoprof,
                  vex=0.1, area=0.1, density=1000, salt=34.608, temp=300,
-                 E=(0.255, 0.0), dive="simulated"):
+                 E=(0.255, 0.0), dive="simulated", experiment_name="temp"):
         """Initializes an MTT model class."""
         self.NAME = f"CrossflowModel{random_str()}_{dive}"
         print(self.NAME)
@@ -852,6 +869,7 @@ class Crossflow(MTT):
 
         json_config_dict = {"model_fixed_params":
                             {"model_type": "crossflow",
+                             "model_name": self.NAME,
                              "plume_loc": self.loc,
                              "extent": self.extent.get_attributes(),
                              "temp": self.t0,
@@ -960,7 +978,7 @@ class Crossflow(MTT):
         mod.v0 = Vs
         mod.entrainment = (Alphs, Bets)
 
-        err = 1.
+        err = 0.
         for i, tt in enumerate(t):
             mod.solve(t=tt, overwrite=True)
             if type(loc) == list:
@@ -969,15 +987,15 @@ class Crossflow(MTT):
                 P = mod.get_value(tt, loc[i, :, :])
             detect = P > thresh
             if type(obs) == list:
-                errt = [_likelihood(d, o) for d, o in zip(detect, obs[i][:])]
+                errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
             else:
-                errt = [_likelihood(d, o) for d, o in zip(detect, obs[i, :])]
-            err = err * np.nanmean(errt)
+                errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i, :])]
+            err = err + np.nansum(errt)
         prior_Alph = self.entrainment[0].predict(Alphs)
         prior_Bet = self.entrainment[1].predict(Bets)
         prior_V = self.v0.predict(Vs)
         prior_A = self.a0.predict(As)
-        prop_samp_prob = err * (prior_Alph * prior_Bet * prior_V * prior_A)
+        prop_samp_prob = err + np.log(prior_Alph) + np.log(prior_Bet) + np.log(prior_V) + np.log(prior_A)
         return prop_samp_prob
 
     def _model_sample_chain(self, mod, last_samp, t, loc, obs, thresh=1e-5):
@@ -1024,6 +1042,11 @@ class Crossflow(MTT):
         self.update_thresh = thresh
         self.used_grid = use_grid
 
+        # create a place to save model checkpoints
+        filepath = os.path.join(output_home(), f"modeling/{self.experiment_name}")
+        if not os.path.exists(filepath):
+            os.mkdir(filepath)
+
         # create clean world to operate
         enviro = copy.deepcopy(self.odesys)
         enviro._model = {}
@@ -1041,10 +1064,21 @@ class Crossflow(MTT):
             samples = np.zeros((num_samps, 4))
             samples[0, :] = last_samp
             naccept = 1
+            accept_tracker = [naccept]
 
             for i in range(1, num_samps):
                 print("Computing Sample: ", i)
                 if i % 10 == 0:
+                    plt.plot(accept_tracker)
+                    plt.savefig(os.path.join(filepath, "num_accepted_samples.png"))
+                    plt.plot(samples[:, 0])
+                    plt.savefig(os.path.join(filepath, "alpha_samples.png"))
+                    plt.plot(samples[:, 1])
+                    plt.savefig(os.path.join(filepath, "beta_samples.png"))
+                    plt.plot(samples[:, 2])
+                    plt.savefig(os.path.join(filepath, "velocity_samples.png"))
+                    plt.plot(samples[:, 3])
+                    plt.savefig(os.path.join(filepath, "area_samples.png"))
                     if i > burnin:
                         print("Saving model updated params...")
                         save_Alph = copy.deepcopy(self.entrainment[0])
@@ -1081,12 +1115,13 @@ class Crossflow(MTT):
                         j_fp.close()
                 prop_samp, prop_samp_prob = self._model_sample_chain(
                     enviro, last_samp, t, loc, obs, thresh=thresh)
-                rho = min(1, prop_samp_prob / last_samp_prob)
+                rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
                 u = np.random.uniform()
                 if u < rho:
                     naccept += 1
                     last_samp_prob = prop_samp_prob
                     last_samp = prop_samp
+                accept_tracker.append(naccept)
                 samples[i, :] = last_samp
             print("Number of accepted samples in chain:", naccept)
             # set new param
