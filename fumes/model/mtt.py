@@ -690,14 +690,34 @@ class MTT(ScienceModel):
             for i in range(1, num_samps):
                 if i + 1 % 10 == 0:
                     print("Computing sample ", i)
-                    plt.plot(accept_tracker)
+                    plt.plot(range(len(accept_tracker)), accept_tracker)
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Number Accepted Samples")
+                    plt.title("Accepted Samples in Chain")
                     plt.savefig(os.path.join(filepath, "num_accepted_samples.png"))
-                    plt.plot(samples[:, 0])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 0])), samples[:, 0])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Entrainment Sample Values")
+                    plt.title("Entrainment Samples")
                     plt.savefig(os.path.join(filepath, "entrainment_samples.png"))
-                    plt.plot(samples[:, 1])
-                    plt.savefig(os.path.join(filepath, "area_samples.png"))
-                    plt.plot(samples[:, 2])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 1])), samples[:, 1])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Velocity Sample Values")
+                    plt.title("Exit Velocity Samples")
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 2])), samples[:, 2])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Area Sample Values")
+                    plt.title("Vent Area Samples")
+                    plt.savefig(os.path.join(filepath, "area_samples.png"))
+                    plt.close()
+                    
                     if i + 1 > burnin:
                         print("Saving model updated params.")
                         np.save(samples)
@@ -1069,16 +1089,41 @@ class Crossflow(MTT):
             for i in range(1, num_samps):
                 print("Computing Sample: ", i)
                 if i % 10 == 0:
-                    plt.plot(accept_tracker)
+                    plt.plot(range(len(accept_tracker)), accept_tracker)
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Number Accepted Samples")
+                    plt.title("Accepted Samples in Chain")
                     plt.savefig(os.path.join(filepath, "num_accepted_samples.png"))
-                    plt.plot(samples[:, 0])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 0])), samples[:, 0])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Alpha Sample Values")
+                    plt.title("Entrainment Alpha Samples")
                     plt.savefig(os.path.join(filepath, "alpha_samples.png"))
-                    plt.plot(samples[:, 1])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 1])), samples[:, 1])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Beta Sample Values")
+                    plt.title("Entrainment Beta Samples")
                     plt.savefig(os.path.join(filepath, "beta_samples.png"))
-                    plt.plot(samples[:, 2])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 2])), samples[:, 2])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Velocity Sample Values")
+                    plt.title("Exit Velocity Samples")
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
-                    plt.plot(samples[:, 3])
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 3])), samples[:, 3])
+                    plt.xlabel("Sample Num")
+                    plt.ylabel("Area Sample Values")
+                    plt.title("Vent Area Samples")
                     plt.savefig(os.path.join(filepath, "area_samples.png"))
+                    plt.close()
+
                     if i > burnin:
                         print("Saving model updated params...")
                         save_Alph = copy.deepcopy(self.entrainment[0])
