@@ -93,3 +93,20 @@ node(){
         fi
 }
 ```
+
+## Running commands interactively on the cluster
+If you want to run commands interactively on the engaging cluster (instead of submitting them as jobs and checking the status via the `qs` and `sq` commands above), this is also easily done. If you have your `~/.bashrc` setup as described above, from the login node, run on of the following:
+```
+node # (the default) will connect you to a cluster node with 40GB of memory and 12 hours of time reserved. 
+node 7 # will connect you to a cluster node with 40GB of memory for 7 hours of reserved time
+node 7 13 # will connect you to a cluster node with 13GB of memory for 7 hours of reserved time
+```
+One you have been connected to a node (there may be some wait if you request a lot of memory or time, but I usually get allocated one of these interactive nodes quite quickly), navigate to your top-level `fumes` directory and run, e.g.,:
+```
+pipenv run python fumes/examples/post_cruise_examples/demo2-stationarymtt-iterativeplans.py
+```
+It is important to use `pipenv run` to run your python code, so that the correct virtual environment is used. You could also just run `pipenv shell` as usual and then use the interactive node as you would normally.
+
+
+## Other notes
+The ssh command above forwards port 8888 from your engaging session to your local computer. If you run a jupyter notebook on the engaging cluster, e.g., `pipenv run jupyter notebook --port 8888`, you should be able to navigate files and run code via a notebook interface in the browser of your computer. It is also possible to connect IDEs, such as VSCode, to the engaging cluster via port 8888, but I have had less success doing this productively. 
