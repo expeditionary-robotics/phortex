@@ -49,7 +49,7 @@ class OfflineRobot(Robot):
 
         samp = self.environment.get_value(t, self.coordinate)
         self.current_observation = samp
-        self.observation_buffer[self.coordinate] = samp
+        self.observation_buffer[self.coordinate] = samp[0]
 
         if t - self.last_report > self.com_window:
             report_coordinate = max(

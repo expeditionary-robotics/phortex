@@ -43,19 +43,18 @@ class Simulator(object):
         """
         self.experiment_name = experiment_name
         self.times = times
-        self.coords = np.zeros((len(times), 3))
-        self.obs = np.zeros_like(times)
+        self.coords = np.zeros((len(times), 3)).astype(float)
+        self.obs = np.zeros_like(times).astype(float)
         self.com_coords = []
         self.com_obs = []
         for i, t in enumerate(times):
             # print("In simulator time: ", t)
             com = self.rob.step(t, duration=times[i] - times[i - 1])
             self.coords[i, :] = copy.deepcopy(self.rob.coordinate)
-            self.obs[i] = copy.deepcopy(self.rob.current_observation)
+            self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation))[0]
             if com is not None:
                 self.com_coords.append(com[0])
                 self.com_obs.append(com[1])
-
         self.com_coords = np.asarray(self.com_coords)
         self.com_obs = np.asarray(self.com_obs)
 

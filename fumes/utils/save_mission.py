@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 import dill as pickle
 import json
+import matplotlib.pyplot as plt
 
 
 def get_mission_hash(mission_name="modelsim"):
@@ -29,6 +30,46 @@ def load_mission(mission_hash):
     with open(filepath, "rb") as fh:
         data = pickle.load(fh)
         return data["robot"], data["model"], data["environment"], data["simulator"]
+
+
+def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, simulation, experiment_dict):
+    """Takes any definable experimental element and saves to visual snapshot."""
+    directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    # plot underlying environment
+    env_snapshot = env.get_snapshot(t=0.0, z=[trajectory.altitude], from_cache=False)
+    plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
+               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.title("Environment Snapshot")
+    plt.savefig(os.path.join(directory, "env_snapshot.png"))
+    plt.close()
+
+    # plot learned model
+    mod_snapshot = model.get_snapshot(t=0.0, z=[trajectory.altitude], from_cache=False)
+    plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
+               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.title("Model Snapshot")
+    plt.savefig(os.path.join(directory, "model_snapshot.png"))
+    plt.close()
+
+    # plot observations and trajectories
+    plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
+               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+    coords = simulation.coords
+    obs = [float(o > experiment_dict["in_plume_thresh"]) for o in simulation.obs]
+    c = plt.scatter(coords[:, 0], coords[:, 1], c=obs, s=0.1, cmap='bwr', vmin=0., vmax=1.)
+    plt.colorbar(c)
+    plt.axis((env.extent.xrange[0], env.extent.xrange[1],
+             env.extent.yrange[0], env.extent.yrange[1]))
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.savefig(os.path.join(directory, "trajectory_snapshot.png"))
 
 
 def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, simulation, experiment_dict):
@@ -91,6 +132,7 @@ def load_experiment_json(experiment_name, iter_num):
     f = open(filepath)
     data = json.load(f)
     return data
+
 
 def print_experiment_json_summary(json_dict):
     """Prints to terminal the entries in a provided dictionary."""

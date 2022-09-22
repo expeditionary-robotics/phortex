@@ -6,7 +6,8 @@
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-from distfit import distfit
+# from distfit import distfit
+from sklearn.neighbors import KernelDensity
 
 from fumes.environment.mtt import StationaryMTT
 from fumes.environment.extent import Extent
@@ -14,7 +15,7 @@ from fumes.environment.profile import Profile
 from fumes.environment.utils import eos_rho, pacific_sp_T, pacific_sp_S
 
 from fumes.model.mtt import MTT
-from fumes.model.parameter import Parameter
+from fumes.model.parameter import ParameterKDE
 
 from fumes.reward import SampleValues
 
@@ -22,12 +23,13 @@ from fumes.robot import OfflineRobot
 from fumes.simulator import Simulator
 
 from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralWithStartGeneratorFlexible
-from fumes.utils.save_mission import save_experiment_json
+from fumes.utils.save_mission import save_experiment_json, save_experiment_visualsnapshot
 
 
 # Set meta/saving parameters
 code_test = True
 experiment_name = f"stationarymtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
+print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
 if code_test:
@@ -63,20 +65,26 @@ rho0 = eos_rho(t0, s0)  # source density
 E = 0.255
 
 # Inferred Source Params
-v0_inf = distfit(distr='uniform')
-v0_inf.fit_transform(np.random.uniform(0.05, 1.5, 2000))
+# v0_inf = distfit(distr='uniform')
+# v0_inf.fit_transform(np.random.uniform(0.05, 1.5, 2000))
+v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
+    np.random.uniform(0.05, 1.5, 2000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.05)
-v0_param = Parameter(v0_inf, v0_prop)
+v0_param = ParameterKDE(v0_inf, v0_prop)
 
-a0_inf = distfit(distr='uniform')
-a0_inf.fit_transform(np.random.uniform(0.05, 0.5, 2000))
+# a0_inf = distfit(distr='uniform')
+# a0_inf.fit_transform(np.random.uniform(0.05, 0.5, 2000))
+a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
+    np.random.uniform(0.05, 0.5, 2000)[:, np.newaxis])
 a0_prop = sp.stats.norm(loc=0, scale=0.01)
-a0_param = Parameter(a0_inf, a0_prop)
+a0_param = ParameterKDE(a0_inf, a0_prop)
 
-E_inf = distfit(distr='uniform')
-E_inf.fit_transform(np.random.uniform(0.1, 0.4, 2000))
+# E_inf = distfit(distr='uniform')
+# E_inf.fit_transform(np.random.uniform(0.1, 0.4, 2000))
+E_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
+    np.random.uniform(0.1, 0.4, 2000)[:, np.newaxis])
 E_prop = sp.stats.norm(loc=0, scale=0.01)
-E_param = Parameter(E_inf, E_prop)
+E_param = ParameterKDE(E_inf, E_prop)
 
 # Model Simulation Params
 extent = Extent(xrange=(-500., 500.),
@@ -95,7 +103,7 @@ resolution = 5  # lawnmower resolution (in meters)
 # Robot params
 vel = 0.5  # robot velocity (in meters/second)
 com_window = 120  # communication window (in seconds)
-altitude = 150.0  # flight altitude (in meters)
+altitude = 100.0  # flight altitude (in meters)
 
 # Reward function
 reward = SampleValues(
@@ -177,6 +185,8 @@ for i in range(outer_iter):
     # Update model
     print("Updating model!")
     obs = [float(o > thresh) for o in simulator.obs]
+    print("Total samples: ", len(obs))
+    print("Total obs: ", np.nansum(obs))
     update_coords = [simulator.coords.T[0], simulator.coords.T[1], simulator.coords.T[2]]
     newEntrainment, newVelocity, newArea = mtt.update(0.0,  # since MTT is stationary, just post a single time
                                                       update_coords,
@@ -184,7 +194,7 @@ for i in range(outer_iter):
                                                       num_samps=sample_iter,
                                                       burnin=burn,
                                                       thresh=thresh)
-    print(newEntrainment, newVelocity, newArea)
+    print(f"E:{newEntrainment}, V:{newVelocity}, A:{newArea}")
 
     # Log information
     experiment_dict = {"experiment_iteration": i,
@@ -204,5 +214,16 @@ for i in range(outer_iter):
                          reward=reward,
                          simulation=simulator,
                          experiment_dict=experiment_dict)
+
+    save_experiment_visualsnapshot(experiment_name,
+                                   iter_num=i,
+                                   rob=rob,
+                                   model=mtt,
+                                   env=env,
+                                   traj_opt=planners[0],
+                                   trajectory=plan_opt,
+                                   reward=reward,
+                                   simulation=simulator,
+                                   experiment_dict=experiment_dict)
 
 # Generate simple visualizations

@@ -613,8 +613,8 @@ class MTT(ScienceModel):
         mod.solve(t=t, overwrite=True)  # always overwrite in sampling
 
         P = mod.get_value(t, loc)
-        detect = P > thresh
-        err = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs)]
+        detect = np.log(np.ones_like(P)+P) > thresh
+        err = [np.log(_likelihood(float(d), o)) for d, o in zip(detect, obs)]
         err = np.nansum(err)
         prior_E = self.entrainment.predict(Es)
         print(prior_E, Es)
@@ -689,7 +689,7 @@ class MTT(ScienceModel):
 
             for i in range(1, num_samps):
                 print("Computing sample ", i)
-                if (i + 1) % 10 == 0:
+                if (i + 1) % 10 == 0 or i + 1 == num_samps:
                     plt.plot(range(len(accept_tracker)), accept_tracker)
                     plt.xlabel("Sample Num")
                     plt.ylabel("Number Accepted Samples")
@@ -704,6 +704,14 @@ class MTT(ScienceModel):
                     plt.savefig(os.path.join(filepath, "entrainment_samples.png"))
                     plt.close()
 
+                    plt.plot(np.linspace(0, 1, 100), self.entrainment.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Entrainment Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Entrainment Samples")
+                    plt.savefig(os.path.join(filepath, "entrainment_distribution.png"))
+                    plt.close()
+
                     plt.plot(range(len(samples[:, 1])), samples[:, 1])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Velocity Sample Values")
@@ -711,11 +719,27 @@ class MTT(ScienceModel):
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     plt.close()
 
+                    plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Velocity Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Velocity Samples")
+                    plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
+                    plt.close()
+
                     plt.plot(range(len(samples[:, 2])), samples[:, 2])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Area Sample Values")
                     plt.title("Vent Area Samples")
                     plt.savefig(os.path.join(filepath, "area_samples.png"))
+                    plt.close()
+
+                    plt.plot(np.linspace(0, 1, 100), self.entrainment.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Area Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Area Samples")
+                    plt.savefig(os.path.join(filepath, "area_distribution.png"))
                     plt.close()
 
                     # if i + 1 > burnin:

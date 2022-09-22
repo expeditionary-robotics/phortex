@@ -2,6 +2,7 @@
 import numpy as np
 import scipy as sp
 from distfit import distfit
+from sklearn.neighbors import KernelDensity
 
 
 class Parameter(object):
@@ -114,6 +115,81 @@ class Parameter(object):
             attr_dict['dist_loc'] = self.dist.model['loc']
             attr_dict['dist_scale'] = self.dist.model['scale']
             attr_dict['dist_arg'] = self.dist.model['arg']
+
+        if np.isscalar(self.prop):
+            attr_dict['prop_name'] = 'is_scalar'
+            attr_dict['prop_loc'] = self.prop
+            attr_dict['prop_scale'] = None
+        else:
+            attr_dict['prop_name'] = str(self.prop.dist)
+            attr_dict['prop_loc'] = self.prop.mean()
+            attr_dict['prop_scale'] = self.prop.std()
+
+        return attr_dict
+
+
+class ParameterKDE(Parameter):
+    """Creates a parameter class using sklearn instead of distfit"""
+
+    def _get_best_distribution(self, data):
+        """Fits a distribution over input data.
+
+        Args:
+            data (list[floats]): data to fit a distribution to
+
+        Returns:
+            dist (a scipy distribution object)
+        """
+        dist = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(data[:, np.newaxis])
+        return dist
+
+    def sample(self, num_samples):
+        """Generates samples from distribution.
+
+        Args:
+            num_samples (int): number of samples
+
+        Returns:
+            samples from the distribution
+        """
+        if np.isscalar(self.dist):
+            return np.asarray([self.dist for m in range(num_samples)])
+        else:
+            samples = self.dist.sample(num_samples)
+            return samples
+
+    def predict(self, X):
+        """Generates PDF probability.
+
+        Args:
+            X (list[float]): points to perform inference over
+
+        Returns:
+            probability of observation
+        """
+        if np.isscalar(self.dist):
+            return 1.0
+        elif np.isscalar(X):
+            pdf_fitted = np.exp(self.dist.score_samples(np.asarray([X])[:, np.newaxis]))
+            return pdf_fitted
+        else:
+            pdf_fitted = np.exp(self.dist.score_samples(X[:, np.newaxis]))
+            return pdf_fitted
+
+    def get_attributes(self):
+        """Provides meta data about a parameter."""
+        attr_dict = {}
+
+        if np.isscalar(self.dist):
+            attr_dict['dist_name'] = 'is_scalar'
+            attr_dict['dist_loc'] = self.dist
+            attr_dict['dist_scale'] = None
+            attr_dict['dist_arg'] = None
+        else:
+            attr_dict['dist_name'] = "KDE"
+            attr_dict['dist_params'] = self.dist.get_params()
+            attr_dict['dist_loc'] = self.dist.sample(1000).mean()
+            attr_dict['dist_scale'] = self.dist.sample(1000).std()
 
         if np.isscalar(self.prop):
             attr_dict['prop_name'] = 'is_scalar'
