@@ -37,9 +37,9 @@ if code_test:
     burn = 1  # number of burn-in samples
     plan_iter = 3  # planning iterations
     outer_iter = 2  # number of traj and model update loops
-    samp_dist = 10.0  # distance between samples (in meters)
-    time_resolution = 50  # time resolution (in seconds)
-    duration = 2 * 50  # total mission time (in seconds)
+    samp_dist = 30.0  # distance between samples (in meters)
+    time_resolution = 3600  # time resolution (in seconds)
+    duration = 2 * 3600  # total mission time (in seconds)
 
 else:
     sample_iter = 200  # number of samples to search over
@@ -87,13 +87,13 @@ bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop)
 
 # Current params
-training_t = np.linspace(0, duration, 5000)
+training_t = np.linspace(0, duration+1, 5000)
 def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
 def headfunc(t): return np.zeros_like(t) # set constant heading
 
-curmag = CurrMag(training_t, curfunc(None, training_t) + np.random.normal(0, 0.1, training_t.shape),
+curmag = CurrMag(training_t, curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
                  training_iter=100, learning_rate=0.1)
-curhead = CurrHead(training_t, headfunc(training_t) + np.random.normal(0, 0.1, training_t.shape),
+curhead = CurrHead(training_t, headfunc(training_t) + np.random.normal(0, 0.01, training_t.shape),
                    training_iter=100, learning_rate=0.1)
 
 # Model Simulation Params
@@ -192,13 +192,14 @@ for i in range(outer_iter):
     # Update model
     print("Updating model!")
     obs = [[float(o > thresh)] for o in simulator.obs]
+    obs = np.asarray(obs).flatten()
     print("Total samples: ", len(obs))
     print("Total obs: ", np.nansum(obs))
     obs_t = np.unique(np.round(times/3600.))  # get snapshots by hour
     obs_c = []
     obs_o = []
     for j, ot in enumerate(obs_t):
-        idt = np.round(j/3600.) == ot
+        idt = np.round(times/3600.) == ot
         obs_c.append((simulator.coords[idt, 0], simulator.coords[idt, 1], simulator.coords[idt, 2]))
         obs_o.append(obs[idt])
     newAlph, newBet, newVelocity, newArea = mtt.update(obs_t*3600.,

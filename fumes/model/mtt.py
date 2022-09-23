@@ -1052,15 +1052,9 @@ class Crossflow(MTT):
         err = 0.
         for i, tt in enumerate(t):
             mod.solve(t=tt, overwrite=True)
-            if type(loc) == list:
-                P = mod.get_value(tt, loc[i][:])
-            else:
-                P = mod.get_value(tt, loc[i, :, :].T)
+            P = mod.get_value(tt, loc[i][:])
             detect = np.log(np.ones_like(P)+P) > thresh
-            if type(obs) == list:
-                errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
-            else:
-                errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i, :])]
+            errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
             err = err + np.nansum(errt)
         prior_Alph = self.entrainment[0].predict(Alphs)
         prior_Bet = self.entrainment[1].predict(Bets)
