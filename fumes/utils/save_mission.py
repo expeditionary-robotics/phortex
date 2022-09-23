@@ -45,7 +45,7 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("Environment Snapshot")
-    plt.savefig(os.path.join(directory, "env_snapshot.png"))
+    plt.savefig(os.path.join(directory, f"env_snapshot_{iter_num}.png"))
     plt.close()
 
     # plot learned model
@@ -55,7 +55,7 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("Model Snapshot")
-    plt.savefig(os.path.join(directory, "model_snapshot.png"))
+    plt.savefig(os.path.join(directory, f"model_snapshot_{iter_num}.png"))
     plt.close()
 
     # plot observations and trajectories
@@ -69,7 +69,7 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
              env.extent.yrange[0], env.extent.yrange[1]))
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
-    plt.savefig(os.path.join(directory, "trajectory_snapshot.png"))
+    plt.savefig(os.path.join(directory, f"trajectory_snapshot_{iter_num}.png"))
 
 
 def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, simulation, experiment_dict):

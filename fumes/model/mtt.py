@@ -689,7 +689,7 @@ class MTT(ScienceModel):
 
             for i in range(1, num_samps):
                 print("Computing sample ", i)
-                if (i + 1) % 10 == 0 or i + 1 == num_samps:
+                if (i + 1) % 10 == 0:
                     plt.plot(range(len(accept_tracker)), accept_tracker)
                     plt.xlabel("Sample Num")
                     plt.ylabel("Number Accepted Samples")
@@ -742,31 +742,6 @@ class MTT(ScienceModel):
                     plt.savefig(os.path.join(filepath, "area_distribution.png"))
                     plt.close()
 
-                    # if i + 1 > burnin:
-                    #     print("Saving model updated params.")
-                    #     np.save(samples)
-                    #     save_E = copy.deepcopy(self.entrainment)
-                    #     save_V = copy.deepcopy(self.v0)
-                    #     save_A = copy.deepcopy(self.a0)
-
-                    #     save_E.update(samples[burnin:, 0])
-                    #     save_A.update(samples[burnin:, 1])
-                    #     save_V.update(samples[burnin:, 2])
-
-                    #     json_config_dict = {"model_learned_params":
-                    #                         {"velocity_mle": np.mean(save_V.sample(5000)),
-                    #                          "velocity_distribution": save_V.get_attributes(),
-                    #                          "area_mle": np.mean(save_A.sample(5000)),
-                    #                          "area_distribution": save_A.get_attributes(),
-                    #                          "entrainment_mle": np.mean(save_E.sample(5000)),
-                    #                          "entrainment_distribution": save_E.get_attributes(),
-                    #                          }}
-                    #     json_output_file = os.path.join(
-                    #         output_home(), f"{self.NAME}_update_freeze.json")
-                    #     j_fp = open(json_output_file, 'w')
-                    #     json.dump(json_config_dict, j_fp)
-                    #     j_fp.close()
-
                 prop_samp, prop_samp_prob = self._model_sample_chain(enviro,
                                                                      last_samp,
                                                                      t,
@@ -796,11 +771,27 @@ class MTT(ScienceModel):
             plt.savefig(os.path.join(filepath, "entrainment_samples.png"))
             plt.close()
 
+            plt.plot(np.linspace(0, 1, 100), self.entrainment.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Entrainment Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Entrainment Samples")
+            plt.savefig(os.path.join(filepath, "entrainment_distribution.png"))
+            plt.close()
+
             plt.plot(range(len(samples[:, 1])), samples[:, 1])
             plt.xlabel("Sample Num")
             plt.ylabel("Velocity Sample Values")
             plt.title("Exit Velocity Samples")
             plt.savefig(os.path.join(filepath, "velocity_samples.png"))
+            plt.close()
+
+            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Velocity Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Velocity Samples")
+            plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
             plt.close()
 
             plt.plot(range(len(samples[:, 2])), samples[:, 2])
@@ -809,6 +800,15 @@ class MTT(ScienceModel):
             plt.title("Vent Area Samples")
             plt.savefig(os.path.join(filepath, "area_samples.png"))
             plt.close()
+
+            plt.plot(np.linspace(0, 1, 100), self.entrainment.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Area Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Area Samples")
+            plt.savefig(os.path.join(filepath, "area_distribution.png"))
+            plt.close()
+            
             # set new param
             self.entrainment.update(samples[burnin:, 0])
             self.v0.update(samples[burnin:, 1])
@@ -933,10 +933,10 @@ class Crossflow(MTT):
             dict object compatible for JSON saving
         """
         if z is None:
-            z = self.z
+            z = np.linspace(0, 200, 100)
 
         if t is None:
-            t = self.t
+            t = np.linspace(0, 3600 * 24, 25)
 
         json_config_dict = {"model_fixed_params":
                             {"model_type": "crossflow",
@@ -1055,8 +1055,8 @@ class Crossflow(MTT):
             if type(loc) == list:
                 P = mod.get_value(tt, loc[i][:])
             else:
-                P = mod.get_value(tt, loc[i, :, :])
-            detect = P > thresh
+                P = mod.get_value(tt, loc[i, :, :].T)
+            detect = np.log(np.ones_like(P)+P) > thresh
             if type(obs) == list:
                 errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
             else:
@@ -1150,29 +1150,61 @@ class Crossflow(MTT):
                     plt.plot(range(len(samples[:, 0])), samples[:, 0])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Alpha Sample Values")
-                    plt.title("Entrainment Alpha Samples")
+                    plt.title("Alpha Samples")
                     plt.savefig(os.path.join(filepath, "alpha_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 1])), samples[:, 1])
+                    plt.plot(np.linspace(0, 1, 100), self.entrainment[0].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Alpha Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Alpha Samples")
+                    plt.savefig(os.path.join(filepath, "alpha_distribution.png"))
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 1])), samples[:, 0])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Beta Sample Values")
-                    plt.title("Entrainment Beta Samples")
+                    plt.title("Beta Samples")
                     plt.savefig(os.path.join(filepath, "beta_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 2])), samples[:, 2])
+                    plt.plot(np.linspace(0, 1, 100), self.entrainment[1].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Beta Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Beta Samples")
+                    plt.savefig(os.path.join(filepath, "beta_distribution.png"))
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 2])), samples[:, 1])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Velocity Sample Values")
                     plt.title("Exit Velocity Samples")
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 3])), samples[:, 3])
+                    plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Velocity Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Velocity Samples")
+                    plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
+                    plt.close()
+
+                    plt.plot(range(len(samples[:, 3])), samples[:, 2])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Area Sample Values")
                     plt.title("Vent Area Samples")
                     plt.savefig(os.path.join(filepath, "area_samples.png"))
+                    plt.close()
+
+                    plt.plot(np.linspace(0, 1, 100), self.a0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.hist(samples[:, 3], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+                    plt.xlabel("Area Sample Values")
+                    plt.ylabel("PDF")
+                    plt.title("Area Samples")
+                    plt.savefig(os.path.join(filepath, "area_distribution.png"))
                     plt.close()
 
                     if i > burnin:
@@ -1194,21 +1226,6 @@ class Crossflow(MTT):
 
                         print("Saved V, A, Alph, Bet: ", (v0_mean, a0_mean, alph_mean, bet_mean))
 
-                        # json_config_dict = {"model_learned_params":
-                        #                     {"velocity_mle": v0_mean,
-                        #                      "velocity_distribution": save_V.get_attributes(),
-                        #                      "area_mle": a0_mean,
-                        #                      "area_distribution": save_A.get_attributes(),
-                        #                      "entrainment_alpha_mle": alph_mean,
-                        #                      "entrainment_alpha_distribution": save_Alph.get_attributes(),
-                        #                      "entrainment_beta_mle": bet_mean,
-                        #                      "entrainment_beta_distribution": save_Bet.get_attributes(),
-                        #                      }}
-                        # json_output_file = os.path.join(
-                        #     output_home(), f"{self.NAME}_update_freeze.json")
-                        # j_fp = open(json_output_file, 'w')
-                        # json.dump(json_config_dict, j_fp)
-                        # j_fp.close()
                 prop_samp, prop_samp_prob = self._model_sample_chain(
                     enviro, last_samp, t, loc, obs, thresh=thresh)
                 rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
@@ -1230,30 +1247,63 @@ class Crossflow(MTT):
             plt.plot(range(len(samples[:, 0])), samples[:, 0])
             plt.xlabel("Sample Num")
             plt.ylabel("Alpha Sample Values")
-            plt.title("Entrainment Alpha Samples")
+            plt.title("Alpha Samples")
             plt.savefig(os.path.join(filepath, "alpha_samples.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 1])), samples[:, 1])
+            plt.plot(np.linspace(0, 1, 100), self.entrainment[0].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Alpha Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Alpha Samples")
+            plt.savefig(os.path.join(filepath, "alpha_distribution.png"))
+            plt.close()
+
+            plt.plot(range(len(samples[:, 1])), samples[:, 0])
             plt.xlabel("Sample Num")
             plt.ylabel("Beta Sample Values")
-            plt.title("Entrainment Beta Samples")
+            plt.title("Beta Samples")
             plt.savefig(os.path.join(filepath, "beta_samples.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 2])), samples[:, 2])
+            plt.plot(np.linspace(0, 1, 100), self.entrainment[1].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Beta Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Beta Samples")
+            plt.savefig(os.path.join(filepath, "beta_distribution.png"))
+            plt.close()
+
+            plt.plot(range(len(samples[:, 2])), samples[:, 1])
             plt.xlabel("Sample Num")
             plt.ylabel("Velocity Sample Values")
             plt.title("Exit Velocity Samples")
             plt.savefig(os.path.join(filepath, "velocity_samples.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 3])), samples[:, 3])
+            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Velocity Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Velocity Samples")
+            plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
+            plt.close()
+
+            plt.plot(range(len(samples[:, 3])), samples[:, 2])
             plt.xlabel("Sample Num")
             plt.ylabel("Area Sample Values")
             plt.title("Vent Area Samples")
             plt.savefig(os.path.join(filepath, "area_samples.png"))
             plt.close()
+
+            plt.plot(np.linspace(0, 1, 100), self.a0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.hist(samples[:, 3], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.xlabel("Area Sample Values")
+            plt.ylabel("PDF")
+            plt.title("Area Samples")
+            plt.savefig(os.path.join(filepath, "area_distribution.png"))
+            plt.close()
+            
             # set new param
             self.entrainment[0].update(samples[burnin:, 0])
             self.entrainment[1].update(samples[burnin:, 1])

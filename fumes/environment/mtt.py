@@ -944,9 +944,9 @@ class CrossflowMTT(StationaryMTT):
                             "z": z.tolist(),
                             "s": self.s.tolist(),
                             "t": t.tolist(),
-                            "tprof": self.tprof(self.z).tolist(),
-                            "sprof": self.sprof(self.z).tolist(),
-                            "rhoprof": self.rhoprof(self.tprof(self.z), self.sprof(self.z)).tolist(),
+                            "tprof": self.tprof(z).tolist(),
+                            "sprof": self.sprof(z).tolist(),
+                            "rhoprof": self.rhoprof(self.tprof(z), self.sprof(z)).tolist(),
                             "curfunc": self.currents(None, t).tolist(),
                             "headfunc": self.heading(t).tolist(),
                             }
@@ -996,13 +996,12 @@ class CrossflowMTT(StationaryMTT):
             return_all (bool): whether to return more than prob
         """
         prob = []
-
         QueryX, QueryY, z = loc
 
         # Re-center query to plume
-        Qx = np.atleast_1d(QueryX - self.loc[0])
-        Qy = np.atleast_1d(QueryY - self.loc[1])
-        Qz = np.atleast_1d(z)
+        Qx = np.atleast_1d(QueryX - self.loc[0]).flatten()
+        Qy = np.atleast_1d(QueryY - self.loc[1]).flatten()
+        Qz = np.atleast_1d(z).flatten()
 
         X = self.x_disp(t)
         Z = self.z_disp(t)  # put plume in world coords
