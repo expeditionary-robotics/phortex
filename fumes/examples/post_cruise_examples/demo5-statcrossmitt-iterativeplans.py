@@ -87,14 +87,14 @@ bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop)
 
 # Current params
-training_t = np.linspace(0, duration+1, 5000)
+training_t = np.linspace(0, duration+1, 1000)
 def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
-def headfunc(t): return np.zeros_like(t) # set constant heading
+def headfunc(t): return np.ones_like(t) * np.pi / 2. # set constant heading
 
 curmag = CurrMag(training_t, curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
-                 training_iter=100, learning_rate=0.1)
-curhead = CurrHead(training_t, headfunc(training_t) + np.random.normal(0, 0.01, training_t.shape),
-                   training_iter=100, learning_rate=0.1)
+                 training_iter=100, learning_rate=0.01)
+curhead = CurrHead(training_t, headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
+                   training_iter=100, learning_rate=0.01)
 
 # Model Simulation Params
 extent = Extent(xrange=(-500., 500.),

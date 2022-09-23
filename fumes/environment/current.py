@@ -24,9 +24,9 @@ class CurrMag(GPSampler):
         # return [interpolate.interp1d(self.trainx.cpu().numpy(), self.sample(self.trainx.cpu().numpy(), 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
         # return [interpolate.interp1d(self.trainx.cpu().numpy(), self.sample(self.trainx.cpu().numpy(), 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
         try:
-            return [interpolate.interp1d(self.trainx.cpu().numpy(), self.sample(self.trainx.cpu().numpy(), 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
+            return [interpolate.interp1d(unnormalize_data(self.trainx.cpu().numpy(), self.x_minmax), self.sample(self.trainx.cpu().numpy(), 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
         except:
-            return [interpolate.interp1d(self.trainx, self.sample(self.trainx, 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
+            return [interpolate.interp1d(unnormalize_data(self.trainx, self.x_minmax), self.sample(self.trainx, 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
 
 
 class CurrHead(GPSampler):
@@ -37,11 +37,11 @@ class CurrHead(GPSampler):
         # Convert time to fractional hours from UTC 00:00:00
         t = t / 3600
         t = t % 24
-        return self.cache_model(t) % 360.
+        return self.cache_model(t) * np.pi / 180.
 
     def sample_heading(self, num_samples):
         # return [interpolate.interp1d(self.trainx, self.sample(self.trainx, 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
         try:
-            return [interpolate.interp1d(self.trainx.cpu().numpy(), self.sample(self.trainx.cpu().numpy(), 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
+            return [interpolate.interp1d(unnormalize_data(self.trainx.cpu().numpy(), self.x_minmax), self.sample(self.trainx.cpu().numpy(), 1) * np.pi / 180., bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
         except:
-            return [interpolate.interp1d(self.trainx, self.sample(self.trainx, 1), bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
+            return [interpolate.interp1d(unnormalize_data(self.trainx, self.x_minmax), self.sample(self.trainx, 1) * np.pi / 180., bounds_error=False, fill_value="extrapolate") for i in range(num_samples)]
