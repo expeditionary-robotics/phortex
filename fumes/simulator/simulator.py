@@ -35,11 +35,14 @@ class Simulator(object):
         self.com_coords = None  # coordinates communicated online
         self.com_obs = None  # observations communicated online
 
-    def simulate(self, times, experiment_name=None):
+    def simulate(self, times, experiment_name=None, with_noise=False, noise_portion=0.1):
         """Perform simulation.
 
         Args:
             times (np.array): array of times to simulate
+            experiment_name (string): exp name running this simulator
+            with_noise (bool): whether to corrupt simulated observations with noise
+            noise_portion (float): percentage corrupted noise
         """
         self.experiment_name = experiment_name
         self.times = times
@@ -51,7 +54,10 @@ class Simulator(object):
             # print("In simulator time: ", t)
             com = self.rob.step(t, duration=times[i] - times[i - 1])
             self.coords[i, :] = copy.deepcopy(self.rob.coordinate)
-            self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation))[0]
+            if with_noise is True:
+                self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation) * np.random.choice([0,1],1, replace=True, p=[noise_portion, 1-noise_portion]))[0]
+            else:
+                self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation))[0]
             if com is not None:
                 self.com_coords.append(com[0])
                 self.com_obs.append(com[1])

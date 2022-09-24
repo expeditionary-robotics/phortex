@@ -28,14 +28,14 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 # Set meta/saving parameters
 code_test = True
-experiment_name = f"statcrossmtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
+experiment_name = f"local_statcrossmtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
 if code_test:
-    sample_iter = 20  # number of samples to search over
+    sample_iter = 50  # number of samples to search over
     burn = 1  # number of burn-in samples
-    plan_iter = 3  # planning iterations
+    plan_iter = 5  # planning iterations
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 30.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
@@ -47,8 +47,8 @@ else:
     plan_iter = 50  # planning iterations
     outer_iter = 5  # number of traj and model update loops
     samp_dist = 0.5  # distance between samples (in meters)
-    time_resolution = 3600 * 4  # time resolution (in seconds)
-    duration = 8 * 60 * 60  # total mission time (in seconds)
+    time_resolution = 3600 * 2  # time resolution (in seconds)
+    duration = 4 * 60 * 60  # total mission time (in seconds)
 
 # "Global" Model Parameters
 s = np.linspace(0, 500, 100)  # distance to integrate over
@@ -66,23 +66,23 @@ rho0 = eos_rho(t0, s0)  # source density
 E = (0.12, 0.1)
 
 # Inferred Source Params
-v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 1.5, 2000)[:, np.newaxis])
-v0_prop = sp.stats.norm(loc=0, scale=0.1)
+v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+    np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
+v0_prop = sp.stats.norm(loc=0, scale=0.05)
 v0_param = ParameterKDE(v0_inf, v0_prop)
 
-a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 0.5, 2000)[:, np.newaxis])
-a0_prop = sp.stats.norm(loc=0, scale=0.1)
+a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+    np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
+a0_prop = sp.stats.norm(loc=0, scale=0.05)
 a0_param = ParameterKDE(a0_inf, a0_prop)
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
-    np.random.uniform(0.1, 0.2, 2000)[:, np.newaxis])
+    np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
 alph_prop = sp.stats.norm(loc=0, scale=0.01)
 alph_param = ParameterKDE(alph_inf, alph_prop)
 
-bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 0.25, 2000)[:, np.newaxis])
+bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+    np.random.uniform(0.01, 0.25, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop)
 
@@ -105,6 +105,8 @@ extent = Extent(xrange=(-500., 500.),
                 zres=50,
                 global_origin=(0., 0., 0.))
 thresh = 1e-5  # probability threshold for a detection
+simulate_with_noise = True
+simulator_noise = 0.1
 
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
@@ -187,7 +189,10 @@ for i in range(outer_iter):
 
     # Run the simulator
     times = np.arange(0, duration + 1)
-    simulator.simulate(times, experiment_name=f"{experiment_name}_iteration{i}")
+    simulator.simulate(times,
+                       experiment_name=f"{experiment_name}_iteration{i}",
+                       with_noise=simulate_with_noise,
+                       noise_portion=simulator_noise)
 
     # Update model
     print("Updating model!")

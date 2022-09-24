@@ -140,7 +140,7 @@ class ParameterKDE(Parameter):
         Returns:
             dist (a scipy distribution object)
         """
-        dist = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(data[:, np.newaxis])
+        dist = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(data[:, np.newaxis])
         return dist
 
     def sample(self, num_samples):

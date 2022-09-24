@@ -1049,18 +1049,24 @@ class Crossflow(MTT):
         mod.v0 = Vs
         mod.entrainment = (Alphs, Bets)
 
-        err = 0.
+        # err = 0.
+        # err_err = 0.
+        err_br = 0.
         for i, tt in enumerate(t):
             mod.solve(t=tt, overwrite=True)
             P = mod.get_value(tt, loc[i][:])
             detect = np.log(np.ones_like(P)+P) > thresh
-            errt = [np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
-            err = err + np.nansum(errt)
+            # errt = [-np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
+            err_brier = [(_likelihood(d, o) - o)**2 for d, o in zip(detect, obs[i][:])]
+            err_br = err_br + -np.log(np.nanmean(err_brier))  # testing now
+            # errt_err = np.nansum(((obs[i][:] - detect)/0.3)**2)
+            # err = err + np.nansum(errt)  # this one is kinda bad
+            # err_err = err_err + -0.5 * errt_err  # this one is ok
         prior_Alph = self.entrainment[0].predict(Alphs)
         prior_Bet = self.entrainment[1].predict(Bets)
         prior_V = self.v0.predict(Vs)
         prior_A = self.a0.predict(As)
-        prop_samp_prob = err + np.log(prior_Alph) + np.log(prior_Bet) + np.log(prior_V) + np.log(prior_A)
+        prop_samp_prob = err_br + -np.log(prior_Alph) + -np.log(prior_Bet) + -np.log(prior_V) + -np.log(prior_A)
         return prop_samp_prob
 
     def _model_sample_chain(self, mod, last_samp, t, loc, obs, thresh=1e-5):
@@ -1148,27 +1154,11 @@ class Crossflow(MTT):
                     plt.savefig(os.path.join(filepath, "alpha_samples.png"))
                     plt.close()
 
-                    plt.plot(np.linspace(0, 1, 100), self.entrainment[0].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-                    plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
-                    plt.xlabel("Alpha Sample Values")
-                    plt.ylabel("PDF")
-                    plt.title("Alpha Samples")
-                    plt.savefig(os.path.join(filepath, "alpha_distribution.png"))
-                    plt.close()
-
                     plt.plot(range(len(samples[:, 1])), samples[:, 0])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Beta Sample Values")
                     plt.title("Beta Samples")
                     plt.savefig(os.path.join(filepath, "beta_samples.png"))
-                    plt.close()
-
-                    plt.plot(np.linspace(0, 1, 100), self.entrainment[1].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-                    plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
-                    plt.xlabel("Beta Sample Values")
-                    plt.ylabel("PDF")
-                    plt.title("Beta Samples")
-                    plt.savefig(os.path.join(filepath, "beta_distribution.png"))
                     plt.close()
 
                     plt.plot(range(len(samples[:, 2])), samples[:, 1])
@@ -1178,27 +1168,11 @@ class Crossflow(MTT):
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     plt.close()
 
-                    plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-                    plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
-                    plt.xlabel("Velocity Sample Values")
-                    plt.ylabel("PDF")
-                    plt.title("Velocity Samples")
-                    plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
-                    plt.close()
-
                     plt.plot(range(len(samples[:, 3])), samples[:, 2])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Area Sample Values")
                     plt.title("Vent Area Samples")
                     plt.savefig(os.path.join(filepath, "area_samples.png"))
-                    plt.close()
-
-                    plt.plot(np.linspace(0, 1, 100), self.a0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-                    plt.hist(samples[:, 3], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
-                    plt.xlabel("Area Sample Values")
-                    plt.ylabel("PDF")
-                    plt.title("Area Samples")
-                    plt.savefig(os.path.join(filepath, "area_distribution.png"))
                     plt.close()
 
                     if i > burnin:
@@ -1222,14 +1196,27 @@ class Crossflow(MTT):
 
                 prop_samp, prop_samp_prob = self._model_sample_chain(
                     enviro, last_samp, t, loc, obs, thresh=thresh)
-                rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
-                u = np.random.uniform()
-                if u < rho:
+                if prop_samp_prob < last_samp_prob:
+                    rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
+                    print(np.exp(prop_samp_prob - last_samp_prob))
+                    u = np.random.uniform()
+                    if u < rho:
+                        naccept += 1
+                        last_samp_prob = prop_samp_prob
+                        last_samp = prop_samp
+                else:
                     naccept += 1
                     last_samp_prob = prop_samp_prob
                     last_samp = prop_samp
                 accept_tracker.append(naccept)
                 samples[i, :] = last_samp
+            
+            # set new param
+            self.entrainment[0].update(samples[burnin:, 0])
+            self.entrainment[1].update(samples[burnin:, 1])
+            self.v0.update(samples[burnin:, 2])
+            self.a0.update(samples[burnin:, 3])
+            
             print("Number of accepted samples in chain:", naccept)
             plt.plot(range(len(accept_tracker)), accept_tracker)
             plt.xlabel("Sample Num")
@@ -1246,7 +1233,7 @@ class Crossflow(MTT):
             plt.close()
 
             plt.plot(np.linspace(0, 1, 100), self.entrainment[0].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-            plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.hist(samples[:, 0], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
             plt.xlabel("Alpha Sample Values")
             plt.ylabel("PDF")
             plt.title("Alpha Samples")
@@ -1261,7 +1248,7 @@ class Crossflow(MTT):
             plt.close()
 
             plt.plot(np.linspace(0, 1, 100), self.entrainment[1].predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-            plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
             plt.xlabel("Beta Sample Values")
             plt.ylabel("PDF")
             plt.title("Beta Samples")
@@ -1276,7 +1263,7 @@ class Crossflow(MTT):
             plt.close()
 
             plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-            plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
             plt.xlabel("Velocity Sample Values")
             plt.ylabel("PDF")
             plt.title("Velocity Samples")
@@ -1291,18 +1278,13 @@ class Crossflow(MTT):
             plt.close()
 
             plt.plot(np.linspace(0, 1, 100), self.a0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
-            plt.hist(samples[:, 3], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
+            plt.hist(samples[:, 3], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
             plt.xlabel("Area Sample Values")
             plt.ylabel("PDF")
             plt.title("Area Samples")
             plt.savefig(os.path.join(filepath, "area_distribution.png"))
             plt.close()
             
-            # set new param
-            self.entrainment[0].update(samples[burnin:, 0])
-            self.entrainment[1].update(samples[burnin:, 1])
-            self.v0.update(samples[burnin:, 2])
-            self.a0.update(samples[burnin:, 3])
         else:
             # methodically go through all combinations of samples to pick the best
             Alpht = self.entrainment[0].sample(num_samps)
