@@ -38,25 +38,27 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    # plot underlying environment
-    env_snapshot = env.get_snapshot(t=0.0, z=[trajectory.altitude], from_cache=False)
-    plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
-    plt.xlabel('X-coordinate')
-    plt.ylabel('Y-coordinate')
-    plt.title("Environment Snapshot")
-    plt.savefig(os.path.join(directory, f"env_snapshot_{iter_num}.png"))
-    plt.close()
+    snap_times = [topt.traj_generator.t0 for topt in traj_opt]
+    for st in snap_times:
+        # plot underlying environment
+        env_snapshot = env.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
+        plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
+                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+        plt.xlabel('X-coordinate')
+        plt.ylabel('Y-coordinate')
+        plt.title("Environment Snapshot")
+        plt.savefig(os.path.join(directory, f"env_snapshot_t{round(st)}_{iter_num}.png"))
+        plt.close()
 
-    # plot learned model
-    mod_snapshot = model.get_snapshot(t=0.0, z=[trajectory.altitude], from_cache=False)
-    plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
-    plt.xlabel('X-coordinate')
-    plt.ylabel('Y-coordinate')
-    plt.title("Model Snapshot")
-    plt.savefig(os.path.join(directory, f"model_snapshot_{iter_num}.png"))
-    plt.close()
+        # plot learned model
+        mod_snapshot = model.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
+        plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
+                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+        plt.xlabel('X-coordinate')
+        plt.ylabel('Y-coordinate')
+        plt.title("Model Snapshot")
+        plt.savefig(os.path.join(directory, f"model_snapshot_t{round(st)}_{iter_num}.png"))
+        plt.close()
 
     # plot observations and trajectories
     plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
