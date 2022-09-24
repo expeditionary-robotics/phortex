@@ -1154,21 +1154,21 @@ class Crossflow(MTT):
                     plt.savefig(os.path.join(filepath, "alpha_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 1])), samples[:, 0])
+                    plt.plot(range(len(samples[:, 1])), samples[:, 1])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Beta Sample Values")
                     plt.title("Beta Samples")
                     plt.savefig(os.path.join(filepath, "beta_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 2])), samples[:, 1])
+                    plt.plot(range(len(samples[:, 2])), samples[:, 2])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Velocity Sample Values")
                     plt.title("Exit Velocity Samples")
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     plt.close()
 
-                    plt.plot(range(len(samples[:, 3])), samples[:, 2])
+                    plt.plot(range(len(samples[:, 3])), samples[:, 3])
                     plt.xlabel("Sample Num")
                     plt.ylabel("Area Sample Values")
                     plt.title("Vent Area Samples")
@@ -1240,7 +1240,7 @@ class Crossflow(MTT):
             plt.savefig(os.path.join(filepath, "alpha_distribution.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 1])), samples[:, 0])
+            plt.plot(range(len(samples[:, 1])), samples[:, 1])
             plt.xlabel("Sample Num")
             plt.ylabel("Beta Sample Values")
             plt.title("Beta Samples")
@@ -1255,7 +1255,7 @@ class Crossflow(MTT):
             plt.savefig(os.path.join(filepath, "beta_distribution.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 2])), samples[:, 1])
+            plt.plot(range(len(samples[:, 2])), samples[:, 2])
             plt.xlabel("Sample Num")
             plt.ylabel("Velocity Sample Values")
             plt.title("Exit Velocity Samples")
@@ -1270,7 +1270,7 @@ class Crossflow(MTT):
             plt.savefig(os.path.join(filepath, "velocity_distribution.png"))
             plt.close()
 
-            plt.plot(range(len(samples[:, 3])), samples[:, 2])
+            plt.plot(range(len(samples[:, 3])), samples[:, 3])
             plt.xlabel("Sample Num")
             plt.ylabel("Area Sample Values")
             plt.title("Vent Area Samples")
