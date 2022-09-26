@@ -1032,6 +1032,17 @@ class Crossflow(MTT):
 
         Returns: MCMH probability score (float)
         """
+        def _likelihood_br(xm, xo):
+            if xm == 1 and xo == 1:
+                return 0.9
+            elif xm == 1 and xo == 0:
+                return 0.1  # changed on cruise
+            elif xm == 0 and xo == 1:
+                return 0.3
+            elif xm == 0 and xo == 0:
+                return 0.7  # changed on cruise
+            else:
+                return 0.0
 
         def _likelihood(xm, xo):
             if xm == 1 and xo == 1:
@@ -1057,7 +1068,7 @@ class Crossflow(MTT):
             P = mod.get_value(tt, loc[i][:])
             detect = np.log(np.ones_like(P)+P) > thresh
             # errt = [-np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
-            err_brier = [(_likelihood(d, o) - o)**2 for d, o in zip(detect, obs[i][:])]
+            err_brier = [(_likelihood_br(d, o) - o)**2 for d, o in zip(detect, obs[i][:])]
             err_br = err_br + -np.log(np.nanmean(err_brier))  # testing now
             # errt_err = np.nansum(((obs[i][:] - detect)/0.3)**2)
             # err = err + np.nansum(errt)  # this one is kinda bad
