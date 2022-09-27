@@ -3,6 +3,7 @@
 Models a crossflow world, with temporally varying crossflow.
 """
 
+import os
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -39,7 +40,7 @@ if code_test:
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 30.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
-    duration = 2 * 3600  # total mission time (in seconds)
+    duration = 1 * 3600  # total mission time (in seconds)
 
 else:
     sample_iter = 200  # number of samples to search over
@@ -68,23 +69,23 @@ E = (0.12, 0.1)
 # Inferred Source Params
 v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
-v0_prop = sp.stats.norm(loc=0, scale=0.05)
-v0_param = ParameterKDE(v0_inf, v0_prop)
+v0_prop = sp.stats.norm(loc=0, scale=0.1)
+v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
 a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
-a0_prop = sp.stats.norm(loc=0, scale=0.05)
-a0_param = ParameterKDE(a0_inf, a0_prop)
+a0_prop = sp.stats.norm(loc=0, scale=0.1)
+a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
-alph_prop = sp.stats.norm(loc=0, scale=0.01)
-alph_param = ParameterKDE(alph_inf, alph_prop)
+alph_prop = sp.stats.norm(loc=0, scale=0.05)
+alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
 
 bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.01, 0.25, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
-bet_param = ParameterKDE(bet_inf, bet_prop)
+bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 
 # Current params
 training_t = np.linspace(0, duration+1, 100)
