@@ -1070,14 +1070,14 @@ class Crossflow(MTT):
 
         # err = 0.
         # err_err = 0.
-        err_br = 0.
+        err_br = []
         for i, tt in enumerate(t):
             mod.solve(t=tt, overwrite=True)
             P = mod.get_value(tt, loc[i][:])
             detect = np.log(np.ones_like(P)+P) > thresh
             # errt = [-np.log(_likelihood(d, o)) for d, o in zip(detect, obs[i][:])]
             err_brier = [(_likelihood_br_2(d, o) - o)**2 for d, o in zip(detect, obs[i][:])]
-            err_br = err_br + -np.log(np.nanmean(err_brier))  # testing now
+            err_br = err_br + err_brier  # testing now
             # errt_err = np.nansum(((obs[i][:] - detect)/0.3)**2)
             # err = err + np.nansum(errt)  # this one is kinda bad
             # err_err = err_err + -0.5 * errt_err  # this one is ok
@@ -1085,7 +1085,7 @@ class Crossflow(MTT):
         prior_Bet = self.entrainment[1].predict(Bets)
         prior_V = self.v0.predict(Vs)
         prior_A = self.a0.predict(As)
-        prop_samp_prob = err_br + -np.log(prior_Alph) + -np.log(prior_Bet) + -np.log(prior_V) + -np.log(prior_A)
+        prop_samp_prob = np.nanmean(err_br) + np.log(prior_Alph) + np.log(prior_Bet) + np.log(prior_V) + np.log(prior_A)
         return prop_samp_prob
 
     def _model_sample_chain(self, mod, last_samp, t, loc, obs, thresh=1e-5):
@@ -1160,6 +1160,7 @@ class Crossflow(MTT):
                 print("Computing Sample: ", i)
                 if (i+1) % 10 == 0:
                     plt.plot(range(len(accept_tracker)), accept_tracker)
+                    plt.plot(range(len(accept_tracker)), range(len(accept_tracker)), "--")
                     plt.xlabel("Sample Num")
                     plt.ylabel("Number Accepted Samples")
                     plt.title("Accepted Samples in Chain")
@@ -1238,6 +1239,7 @@ class Crossflow(MTT):
             
             print("Number of accepted samples in chain:", naccept)
             plt.plot(range(len(accept_tracker)), accept_tracker)
+            plt.plot(range(len(accept_tracker)), range(len(accept_tracker)), "--")
             plt.xlabel("Sample Num")
             plt.ylabel("Number Accepted Samples")
             plt.title("Accepted Samples in Chain")

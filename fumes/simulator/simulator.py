@@ -34,6 +34,8 @@ class Simulator(object):
         self.obs = None  # observations taken by robot
         self.com_coords = None  # coordinates communicated online
         self.com_obs = None  # observations communicated online
+        self.with_noise = None  # whether simulator returns noisy data
+        self.noise_proportion = None  # proportion of simulator obs corrupted
 
     def simulate(self, times, experiment_name=None, with_noise=False, noise_portion=0.1):
         """Perform simulation.
@@ -45,6 +47,8 @@ class Simulator(object):
             noise_portion (float): percentage corrupted noise
         """
         self.experiment_name = experiment_name
+        self.with_noise = with_noise
+        self.noise_proportion = noise_portion
         self.times = times
         self.coords = np.zeros((len(times), 3)).astype(float)
         self.obs = np.zeros_like(times).astype(float)
@@ -55,7 +59,9 @@ class Simulator(object):
             com = self.rob.step(t, duration=times[i] - times[i - 1])
             self.coords[i, :] = copy.deepcopy(self.rob.coordinate)
             if with_noise is True:
-                self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation) * np.random.choice([0,1],1, replace=True, p=[noise_portion, 1-noise_portion]))[0]
+                obs = copy.deepcopy(self.rob.current_observation)
+                choice = np.random.choice([0,1],1, replace=True, p=[noise_portion, 1-noise_portion])
+                self.obs[i] = np.log((1. * choice) + (obs))[0]
             else:
                 self.obs[i] = np.log(1. + copy.deepcopy(self.rob.current_observation))[0]
             if com is not None:
@@ -79,6 +85,8 @@ class Simulator(object):
                      "com_obs": self.com_obs.tolist(),
                      "com_coords": self.com_coords.tolist(),
                      "times": self.times.tolist(),
+                     "sim_with_noise": self.with_noise,
+                     "noise_proportion": self.noise_proportion,
                      }
         if self.ref_global:
             json_dict["ref_global"] = self.ref_global

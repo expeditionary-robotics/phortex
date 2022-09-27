@@ -8,15 +8,17 @@ from sklearn.neighbors import KernelDensity
 class Parameter(object):
     """Instantiates a parameter object."""
 
-    def __init__(self, prior, proposal):
+    def __init__(self, prior, proposal, limits):
         """Creates a parameter object.
 
         Args:
             prior (distfit object or float): prior
             proposal (scipy stats object or float): proposal
+            limits (list of floats): whether there are hard extremes
         """
         self.dist = prior
         self.prop = proposal
+        self.limits = limits
 
     def _get_best_distribution(self, data):
         """Fits a distribution over input data.
@@ -170,10 +172,16 @@ class ParameterKDE(Parameter):
         if np.isscalar(self.dist):
             return 1.0
         elif np.isscalar(X):
-            pdf_fitted = np.exp(self.dist.score_samples(np.asarray([X])[:, np.newaxis]))
-            return pdf_fitted
+            if X >= self.limits[0] and X <= self.limits[1]:
+                pdf_fitted = np.exp(self.dist.score_samples(np.asarray([X])[:, np.newaxis]))
+                return pdf_fitted
+            else:
+                return 0.
         else:
+            X = np.asarray(X)
+            mask = (X >= self.limits[0]) & (X <= self.limits[1])
             pdf_fitted = np.exp(self.dist.score_samples(X[:, np.newaxis]))
+            pdf_fitted[~mask] = 0.0
             return pdf_fitted
 
     def get_attributes(self):
