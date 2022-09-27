@@ -34,9 +34,9 @@ print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
 if code_test:
-    sample_iter = 10  # number of samples to search over
+    sample_iter = 100  # number of samples to search over
     burn = 1  # number of burn-in samples
-    plan_iter = 2  # planning iterations
+    plan_iter = 5  # planning iterations
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 30.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
@@ -88,13 +88,10 @@ bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 
 # Current params
-training_t = np.linspace(0, duration+1, 100)
-# def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
-# def headfunc(t): return np.ones_like(t) * np.pi / 2. # set constant heading
-
-curmag = CurrMag(training_t/3600.%24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
+training_t = np.linspace(0, duration + 1, 100)
+curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
                  training_iter=500, learning_rate=0.5)
-curhead = CurrHead(training_t/3600.%24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
+curhead = CurrHead(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
                    training_iter=500, learning_rate=0.5)
 
 # Model Simulation Params
@@ -201,14 +198,14 @@ for i in range(outer_iter):
     obs = np.asarray(obs).flatten()
     print("Total samples: ", len(obs))
     print("Total obs: ", np.nansum(obs))
-    obs_t = np.unique(np.round(times/3600.))  # get snapshots by hour
+    obs_t = np.unique(np.round(times / 3600.))  # get snapshots by hour
     obs_c = []
     obs_o = []
     for j, ot in enumerate(obs_t):
-        idt = np.round(times/3600.) == ot
+        idt = np.round(times / 3600.) == ot
         obs_c.append((simulator.coords[idt, 0], simulator.coords[idt, 1], simulator.coords[idt, 2]))
         obs_o.append(obs[idt])
-    newAlph, newBet, newVelocity, newArea = mtt.update(obs_t*3600.,
+    newAlph, newBet, newVelocity, newArea = mtt.update(obs_t * 3600.,
                                                        np.asarray(obs_c),
                                                        np.asarray(obs_o),
                                                        num_samps=sample_iter,
