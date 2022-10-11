@@ -1,8 +1,9 @@
 """Demo script for model updates and trajectory optimization on HPC.
 
-Models a crossflow world, with temporally constant crossflow.
+Models a crossflow world, with temporally varying crossflow.
 """
 
+import os
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
@@ -28,18 +29,18 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 # Set meta/saving parameters
 code_test = True
-experiment_name = f"local_bullseyecrossmtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
+experiment_name = f"local_bullseyemtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
 if code_test:
-    sample_iter = 50  # number of samples to search over
+    sample_iter = 100  # number of samples to search over
     burn = 1  # number of burn-in samples
     plan_iter = 5  # planning iterations
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 30.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
-    duration = 2 * 3600  # total mission time (in seconds)
+    duration = 1 * 3600  # total mission time (in seconds)
 
 else:
     sample_iter = 200  # number of samples to search over
@@ -48,7 +49,7 @@ else:
     outer_iter = 5  # number of traj and model update loops
     samp_dist = 0.5  # distance between samples (in meters)
     time_resolution = 3600 * 2  # time resolution (in seconds)
-    duration = 4 * 60 * 60  # total mission time (in seconds)
+    duration = 6 * 60 * 60  # total mission time (in seconds)
 
 # "Global" Model Parameters
 s = np.linspace(0, 500, 100)  # distance to integrate over
@@ -68,17 +69,17 @@ E = (0.12, 0.1)
 # Inferred Source Params
 v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
-v0_prop = sp.stats.norm(loc=0, scale=0.05)
+v0_prop = sp.stats.norm(loc=0, scale=0.1)
 v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
 a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
-a0_prop = sp.stats.norm(loc=0, scale=0.05)
+a0_prop = sp.stats.norm(loc=0, scale=0.1)
 a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
-alph_prop = sp.stats.norm(loc=0, scale=0.01)
+alph_prop = sp.stats.norm(loc=0, scale=0.05)
 alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
 
 bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
@@ -87,13 +88,13 @@ bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 
 # Current params
-training_t = np.linspace(0, duration+1, 1000)
+training_t = np.linspace(0, duration + 1, 100)
 def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
 
-curmag = CurrMag(training_t, curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
-                 training_iter=100, learning_rate=0.01)
-curhead = CurrHead(training_t, headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
-                   training_iter=100, learning_rate=0.01)
+curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
+                 training_iter=500, learning_rate=0.5)
+curhead = CurrHead(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
+                   training_iter=500, learning_rate=0.5)
 
 # Model Simulation Params
 extent = Extent(xrange=(-500., 500.),
@@ -199,14 +200,14 @@ for i in range(outer_iter):
     obs = np.asarray(obs).flatten()
     print("Total samples: ", len(obs))
     print("Total obs: ", np.nansum(obs))
-    obs_t = np.unique(np.round(times/3600.))  # get snapshots by hour
+    obs_t = np.unique(np.round(times / 3600.))  # get snapshots by hour
     obs_c = []
     obs_o = []
     for j, ot in enumerate(obs_t):
-        idt = np.round(times/3600.) == ot
+        idt = np.round(times / 3600.) == ot
         obs_c.append((simulator.coords[idt, 0], simulator.coords[idt, 1], simulator.coords[idt, 2]))
         obs_o.append(obs[idt])
-    newAlph, newBet, newVelocity, newArea = mtt.update(obs_t*3600.,
+    newAlph, newBet, newVelocity, newArea = mtt.update(obs_t * 3600.,
                                                        np.asarray(obs_c),
                                                        np.asarray(obs_o),
                                                        num_samps=sample_iter,
@@ -238,7 +239,7 @@ for i in range(outer_iter):
                                    rob=rob,
                                    model=mtt,
                                    env=env,
-                                   traj_opt=planners[0],
+                                   traj_opt=planners,
                                    trajectory=plan_opt,
                                    reward=reward,
                                    simulation=simulator,
