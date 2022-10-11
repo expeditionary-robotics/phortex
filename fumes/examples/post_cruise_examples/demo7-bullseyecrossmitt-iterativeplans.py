@@ -28,7 +28,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 # Set meta/saving parameters
 code_test = True
-experiment_name = f"local_statcrossmtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
+experiment_name = f"local_bullseyecrossmtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
