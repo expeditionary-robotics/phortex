@@ -93,7 +93,7 @@ def headfunc(t):
     return angle / 180. * np.pi
 
 def headfunc_fast(t):
-    angle = 50. * np.cos(2 * np.pi * (4 * t) / (24 * 3600.)) + 45.0
+    angle = 50. * np.cos(2 * np.pi * (2 * t) / (24 * 3600.)) + 45.0
     return angle / 180. * np.pi
 
 
