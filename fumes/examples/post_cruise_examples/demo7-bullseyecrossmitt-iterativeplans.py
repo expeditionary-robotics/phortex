@@ -6,8 +6,8 @@ Models a crossflow world, with temporally varying crossflow.
 import os
 import numpy as np
 import scipy as sp
-import matplotlib.pyplot as plt
 from sklearn.neighbors import KernelDensity
+import matplotlib.pyplot as plt
 
 from fumes.environment.mtt import CrossflowMTT
 from fumes.environment.extent import Extent
@@ -90,6 +90,15 @@ bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 # Current params
 training_t = np.linspace(0, duration + 1, 100)
 def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
+
+directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
+if not os.path.exists(directory):
+    os.makedirs(directory)
+plt.plot(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape))
+plt.xlabel('Time')
+plt.ylabel('Current Heading')
+plt.savefig(os.path.join(directory, f"current_function.png"))
+plt.close()
 
 curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
                  training_iter=500, learning_rate=0.5)
