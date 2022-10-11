@@ -69,22 +69,22 @@ E = (0.12, 0.1)
 v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.05)
-v0_param = ParameterKDE(v0_inf, v0_prop)
+v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
 a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
 a0_prop = sp.stats.norm(loc=0, scale=0.05)
-a0_param = ParameterKDE(a0_inf, a0_prop)
+a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
 alph_prop = sp.stats.norm(loc=0, scale=0.01)
-alph_param = ParameterKDE(alph_inf, alph_prop)
+alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
 
 bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
     np.random.uniform(0.01, 0.25, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
-bet_param = ParameterKDE(bet_inf, bet_prop)
+bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 
 # Current params
 training_t = np.linspace(0, duration+1, 1000)

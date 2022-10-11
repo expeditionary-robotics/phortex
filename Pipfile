@@ -26,6 +26,7 @@ gpytorch = "*"
 sockets = "*"
 visdom = "*"
 kaleido = "*"
+sklearn = "*"
 
 [dev-packages]
 
