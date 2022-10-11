@@ -13,7 +13,7 @@ from fumes.environment.mtt import CrossflowMTT
 from fumes.environment.extent import Extent
 from fumes.environment.profile import Profile
 from fumes.environment.current import CurrMag, CurrHead
-from fumes.environment.utils import eos_rho, pacific_sp_T, pacific_sp_S, headfunc
+from fumes.environment.utils import eos_rho, pacific_sp_T, pacific_sp_S, headfunc_fast
 
 from fumes.model.mtt import Crossflow
 from fumes.model.parameter import ParameterKDE
@@ -28,7 +28,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 
 # Set meta/saving parameters
-code_test = True
+code_test = False 
 experiment_name = f"local_bullseyemtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
@@ -94,7 +94,7 @@ def curfunc(x, t): return np.ones_like(t) * 0.5  # set constant magnitude
 directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
 if not os.path.exists(directory):
     os.makedirs(directory)
-plt.plot(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape))
+plt.plot(training_t / 3600. % 24., headfunc_fast(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape))
 plt.xlabel('Time')
 plt.ylabel('Current Heading')
 plt.savefig(os.path.join(directory, f"current_function.png"))
@@ -102,7 +102,7 @@ plt.close()
 
 curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape),
                  training_iter=500, learning_rate=0.5)
-curhead = CurrHead(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
+curhead = CurrHead(training_t / 3600. % 24., headfunc_fast(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
                    training_iter=500, learning_rate=0.5)
 
 # Model Simulation Params
@@ -136,7 +136,7 @@ print("Creating true environment...")
 env = CrossflowMTT(plume_loc=(0, 0, 0), extent=extent, s=s,
                    tprof=pacific_sp_T, sprof=pacific_sp_S, rhoprof=rhoprof,
                    density=rho0, salt=s0, temp=t0,
-                   curfunc=curfunc, headfunc=headfunc,
+                   curfunc=curfunc, headfunc=headfunc_fast,
                    vex=v0, area=a0, entrainment=E)
 
 # Create Model
