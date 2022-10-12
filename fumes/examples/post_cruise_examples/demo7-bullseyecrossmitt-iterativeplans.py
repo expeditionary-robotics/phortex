@@ -3,6 +3,7 @@
 Models a crossflow world, with temporally varying crossflow.
 """
 
+from curses import meta
 import os
 import numpy as np
 import scipy as sp
@@ -28,7 +29,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 
 # Set meta/saving parameters
-code_test = False 
+code_test = True 
 experiment_name = f"local_bullseyemtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
@@ -147,6 +148,7 @@ mtt = Crossflow(plume_loc=(0, 0, 0), extent=extent, s=s,
                 curfunc=curmag, headfunc=curhead,
                 E=(alph_param, bet_param))
 
+meta_loop_data = []
 for i in range(outer_iter):
     print("Starting to optimize...")
     # Append meta-iteration to the experiment name
@@ -232,6 +234,8 @@ for i in range(outer_iter):
                        "total_in_plume_samples": np.nansum(obs),
                        "portion_in_plume_samples": float(np.nansum(obs) / len(obs))}
 
+    meta_loop_data.append(experiment_dict)
+
     save_experiment_json(experiment_name,
                          iter_num=i,
                          rob=rob,
@@ -253,3 +257,13 @@ for i in range(outer_iter):
                                    reward=reward,
                                    simulation=simulator,
                                    experiment_dict=experiment_dict)
+
+    directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    plt.close()
+    fig, ax = plt.subplots(2, 1)
+    ax[0].scatter(range(len(meta_loop_data)), [d["total_in_plume_samples"] for d in meta_loop_data])
+    ax[1].scatter(range(len(meta_loop_data)), [d["portion_in_plume_samples"] for d in meta_loop_data])
+    plt.savefig(os.path.join(directory, f"meta_loop_reward.png"))
+    plt.close()
