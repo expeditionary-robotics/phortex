@@ -29,7 +29,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 
 # Set meta/saving parameters
-code_test = True 
+code_test = False
 experiment_name = f"local_bullseyemtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
@@ -120,10 +120,10 @@ simulator_noise = 0.1
 
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
-resolution = 5  # lawnmower resolution (in meters)
+resolution = 20  # lawnmower resolution (in meters)
 
 # Robot params
-vel = 0.5  # robot velocity (in meters/second)
+vel = 1.0  # robot velocity (in meters/second)
 com_window = 120  # communication window (in seconds)
 altitude = 80.0  # flight altitude (in meters)
 
