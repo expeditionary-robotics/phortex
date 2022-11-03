@@ -32,7 +32,7 @@ from fumes.environment.utils import bent_speer_rona, speer_rona, \
 from fumes.environment.utils import ExactGPModel, StandardApproximateGP
 
 from fumes.simulator.utils import draw_ellipse, to_homogenous, translation, \
-    xrotation, zrotation
+    yrotation, zrotation, xrotation
 
 
 class StationaryMTT(Environment):
@@ -1121,7 +1121,7 @@ class CrossflowMTT(StationaryMTT):
             pts = to_homogenous(pts[0], pts[1])
             T = translation(x * np.cos(heading) + self.loc[0],
                             x * np.sin(heading) + self.loc[1], z)
-            R = xrotation(th / 180. * np.pi)
+            R = yrotation(-th + np.pi / 2)
             Rz = zrotation(heading)
 
             # Apply affine transformation to points

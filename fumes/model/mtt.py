@@ -719,7 +719,7 @@ class MTT(ScienceModel):
                     plt.savefig(os.path.join(filepath, "velocity_samples.png"))
                     plt.close()
 
-                    plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+                    plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
                     plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
                     plt.xlabel("Velocity Sample Values")
                     plt.ylabel("PDF")
@@ -786,7 +786,7 @@ class MTT(ScienceModel):
             plt.savefig(os.path.join(filepath, "velocity_samples.png"))
             plt.close()
 
-            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
             plt.hist(samples[:, 1], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=False)
             plt.xlabel("Velocity Sample Values")
             plt.ylabel("PDF")
@@ -1265,7 +1265,7 @@ class Crossflow(MTT):
             plt.savefig(os.path.join(filepath, "velocity_samples.png"))
             plt.close()
 
-            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 1, 100)), linewidth=3, alpha=0.5)
+            plt.plot(np.linspace(0, 1, 100), self.v0.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
             plt.hist(samples[:, 2], 10, fc='gray', histtype='stepfilled', alpha=0.3, density=True)
             plt.xlabel("Velocity Sample Values")
             plt.ylabel("PDF")
