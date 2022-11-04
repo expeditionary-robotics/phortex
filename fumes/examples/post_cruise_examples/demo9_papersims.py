@@ -30,7 +30,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 # Set meta/saving parameters
 code_test = False
-experiment_name = f"cloud_papermtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
+experiment_name = f"local_papermtt_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
@@ -46,9 +46,9 @@ if code_test:
 else:
     sample_iter = 200  # number of samples to search over
     burn = 50  # number of burn-in samples
-    plan_iter = 50  # planning iterations
+    plan_iter = 20  # planning iterations
     outer_iter = 5  # number of traj and model update loops
-    samp_dist = 0.5  # distance between samples (in meters)
+    samp_dist = 1.0  # distance between samples (in meters)
     time_resolution = 3 * 3600  # time resolution (in seconds)
     duration = 12 * 3600  # total mission time (in seconds)
     num_snaps = 4
@@ -111,7 +111,7 @@ plt.title("Beta Samples")
 plt.savefig(os.path.join(model_directory, "beta_distribution_init.svg"))
 plt.close()
 
-plt.plot(np.linspace(0, 1, 100), v0_param.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
+plt.plot(np.linspace(0, 2, 100), v0_param.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
 plt.vlines(v0, 0, 10, colors="red", linestyles="--")
 plt.xlabel("Velocity Sample Values")
 plt.ylabel("PDF")
@@ -134,13 +134,15 @@ curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random
 curhead = CurrHead(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
                    training_iter=500, learning_rate=0.5)
 
-plt.plot(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape))
+plt.plot(training_t / 3600. % 24., headfunc(training_t) * 180. /
+         np.pi + np.random.normal(0, 0.01, training_t.shape))
 plt.xlabel('Time')
 plt.ylabel('Current Heading')
 plt.savefig(os.path.join(model_directory, f"current_heading.png"))
 plt.close()
 
-plt.plot(training_t / 3600. % 24., curfunc(None, training_t) + np.random.normal(0, 0.01, training_t.shape))
+plt.plot(training_t / 3600. % 24., curfunc(None, training_t) +
+         np.random.normal(0, 0.01, training_t.shape))
 plt.xlabel('Time')
 plt.ylabel('Current Magnitude')
 plt.savefig(os.path.join(model_directory, f"current_magnitude.png"))
@@ -196,7 +198,9 @@ for st in snap_times:
     # plot underlying environment
     env_snapshot = env.get_snapshot(t=st, z=[altitude], from_cache=False)
     plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                                                        env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                        env.extent.xrange[1],
+                                                        env.extent.yrange[0],
+                                                        env.extent.yrange[1]))
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("Environment Snapshot")
@@ -206,7 +210,9 @@ for st in snap_times:
     # plot learned model
     mod_snapshot = mtt.get_snapshot(t=st, z=[altitude], from_cache=False)
     plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                                                        env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                        env.extent.xrange[1],
+                                                        env.extent.yrange[0],
+                                                        env.extent.yrange[1]))
     plt.xlabel('X-coordinate')
     plt.ylabel('Y-coordinate')
     plt.title("Model Snapshot")
@@ -240,10 +246,10 @@ for i in range(outer_iter):
             traj_generator,
             reward,
             x0=(200., 200., 0., xm, ym),  # (lh, lw, rot, origin_x, origin_y)
-            param_bounds=[(20., 500), (20., 500.), (-360., 360.), (-500., 500.), (-500., 500.)],
+            param_bounds=[(20., 500), (20., 500.), (-360., 360.), (-100., 500.), (-100., 500.)],
             param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
             budget=budget,
-            limits=[-500., 500., -500., 500.],
+            limits=[-100., 500., -100., 500.],
             max_iters=plan_iter,
             experiment_name=exp_name
         ))
@@ -326,6 +332,7 @@ for i in range(outer_iter):
     plt.close()
     fig, ax = plt.subplots(2, 1)
     ax[0].scatter(range(len(meta_loop_data)), [d["total_in_plume_samples"] for d in meta_loop_data])
-    ax[1].scatter(range(len(meta_loop_data)), [d["portion_in_plume_samples"] for d in meta_loop_data])
+    ax[1].scatter(range(len(meta_loop_data)), [d["portion_in_plume_samples"]
+                  for d in meta_loop_data])
     plt.savefig(os.path.join(model_directory, f"meta_loop_reward.svg"))
     plt.close()
