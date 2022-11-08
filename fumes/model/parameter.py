@@ -17,6 +17,7 @@ class Parameter(object):
             limits (list of floats): whether there are hard extremes
         """
         self.dist = prior
+        self.bandwidth = prior.bandwidth
         self.prop = proposal
         self.limits = limits
 
@@ -142,7 +143,7 @@ class ParameterKDE(Parameter):
         Returns:
             dist (a scipy distribution object)
         """
-        dist = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(data[:, np.newaxis])
+        dist = KernelDensity(kernel='gaussian', bandwidth=self.bandwidth).fit(data[:, np.newaxis])
         return dist
 
     def sample(self, num_samples):
