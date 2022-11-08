@@ -114,19 +114,19 @@ def bound_constraint(traj_generator, limits, method="SLSQP"):
             {"type": "ineq", "fun": y_lb},
             {"type": "ineq", "fun": y_ub},
         ]
-    elif method == "trust-constr":
+    elif method == "trust-constr" or method=="basinhopping":
         return [
             NonlinearConstraint(
                 fun=lambda theta: traj_generator(*theta).xmin,
                 jac="2-point",
                 lb=limits[0],
-                ub=np.inf,
+                ub=limits[1],
                 keep_feasible=KEEP_FEASIBLE
             ),
             NonlinearConstraint(
                 fun=lambda theta: traj_generator(*theta).xmax,
                 jac="2-point",
-                lb=-np.inf,
+                lb=limits[0],
                 ub=limits[1],
                 keep_feasible=KEEP_FEASIBLE
             ),
@@ -134,13 +134,13 @@ def bound_constraint(traj_generator, limits, method="SLSQP"):
                 fun=lambda theta: traj_generator(*theta).ymin,
                 jac="2-point",
                 lb=limits[2],
-                ub=np.inf,
+                ub=limits[3],
                 keep_feasible=KEEP_FEASIBLE
             ),
             NonlinearConstraint(
                 fun=lambda theta: traj_generator(*theta).ymax,
                 jac="2-point",
-                lb=-np.inf,
+                lb=limits[2],
                 ub=limits[3],
                 keep_feasible=KEEP_FEASIBLE
             ),
@@ -165,11 +165,12 @@ def param_constraint(param_bounds, method="SLSQP"):
               for i, b in enumerate(param_bounds)]
         return c1 + c2
     elif method == "trust-constr":
-        return [
-            LinearConstraint(
-                A=np.eye(len(param_bounds)),
-                lb=np.array([b[0] for b in param_bounds]),
-                ub=np.array([b[1] for b in param_bounds]),
-                keep_feasible=[True] * len(param_bounds)
-            )
-        ]
+        return param_bounds
+        # return [
+        #     LinearConstraint(
+        #         A=np.eye(len(param_bounds)),
+        #         lb=np.array([b[0] for b in param_bounds]),
+        #         ub=np.array([b[1] for b in param_bounds]),
+        #         keep_feasible=[True] * len(param_bounds)
+        #     )
+        # ]

@@ -95,6 +95,7 @@ class TrajectoryOpt(Planner):
         #### Setup constraints ####
         ###########################
         con = []
+        bon = []
         if self.budget is not None:
             print("Adding budget constraint.")
             if self.method != "SLSQP" and self.method != "trust-constr":
@@ -119,7 +120,7 @@ class TrajectoryOpt(Planner):
                 raise ValueError("Cannot perform constrained optimization.")
 
             # Instantiate constraint
-            con += param_constraint(param_bounds=self.param_bounds, method=self.method)
+            bon += param_constraint(param_bounds=self.param_bounds, method=self.method)
 
         ##############################
         #### Add soft constraints ####
@@ -194,6 +195,7 @@ class TrajectoryOpt(Planner):
                 jac=None,
                 x0=np.array(self.x0),
                 options=options,
+                bounds=bon,
                 constraints=con,
                 method=self.method,
                 callback=self._callback)

@@ -35,18 +35,19 @@ print("Experiment Name: ", experiment_name)
 
 # Set iteration parameters
 if code_test:
-    sample_iter = 100  # number of samples to search over
+    sample_iter = 20  # number of samples to search over
     burn = 1  # number of burn-in samples
-    plan_iter = 5  # planning iterations
+    plan_iter = 15  # planning iterations
     outer_iter = 2  # number of traj and model update loops
-    samp_dist = 30.0  # distance between samples (in meters)
+    samp_dist = 1.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
-    duration = 1 * 3600  # total mission time (in seconds)
+    duration = 3 * 3600  # total mission time (in seconds)
+    num_snaps = 3
 
 else:
     sample_iter = 200  # number of samples to search over
     burn = 50  # number of burn-in samples
-    plan_iter = 20  # planning iterations
+    plan_iter = 15  # planning iterations
     outer_iter = 5  # number of traj and model update loops
     samp_dist = 1.0  # distance between samples (in meters)
     time_resolution = 3 * 3600  # time resolution (in seconds)
@@ -69,22 +70,22 @@ rho0 = eos_rho(t0, s0)  # source density
 E = (0.12, 0.1)
 
 # Inferred Source Params
-v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
     np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.1)
 v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
-a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
     np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
 a0_prop = sp.stats.norm(loc=0, scale=0.1)
 a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
-alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
     np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
 alph_prop = sp.stats.norm(loc=0, scale=0.05)
 alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
 
-bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
     np.random.uniform(0.01, 0.25, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
@@ -134,41 +135,39 @@ curmag = CurrMag(training_t / 3600. % 24., curfunc(None, training_t) + np.random
 curhead = CurrHead(training_t / 3600. % 24., headfunc(training_t) * 180. / np.pi + np.random.normal(0, 0.01, training_t.shape),
                    training_iter=500, learning_rate=0.5)
 
-plt.plot(training_t / 3600. % 24., headfunc(training_t) * 180. /
-         np.pi + np.random.normal(0, 0.01, training_t.shape))
+plt.plot(training_t / 3600. % 24., curhead.heading(training_t))
 plt.xlabel('Time')
 plt.ylabel('Current Heading')
-plt.savefig(os.path.join(model_directory, f"current_heading.png"))
+plt.savefig(os.path.join(model_directory, f"current_heading.svg"))
 plt.close()
 
-plt.plot(training_t / 3600. % 24., curfunc(None, training_t) +
-         np.random.normal(0, 0.01, training_t.shape))
+plt.plot(training_t / 3600. % 24., curmag.magnitude(None, training_t))
 plt.xlabel('Time')
 plt.ylabel('Current Magnitude')
-plt.savefig(os.path.join(model_directory, f"current_magnitude.png"))
+plt.savefig(os.path.join(model_directory, f"current_magnitude.svg"))
 plt.close()
 
 # Model Simulation Params
 extent = Extent(xrange=(-100., 500.),
-                xres=150,
+                xres=100,
                 yrange=(-100., 500.),
-                yres=150,
+                yres=100,
                 zrange=(0, 200),
                 zres=50,
                 global_origin=(0., 0., 0.))
 thresh = 1e-5  # probability threshold for a detection
-simulate_with_noise = True
+simulate_with_noise = False
 simulator_noise = 0.1
 snap_times = np.linspace(0, duration + 1, num_snaps)
 
 # Trajectory params
 traj_type = "lawnmower"  # type of fixed trajectory
-resolution = 5  # lawnmower resolution (in meters)
+resolution = 10  # lawnmower resolution (in meters)
 
 # Robot params
 vel = 0.5  # robot velocity (in meters/second)
 com_window = 120  # communication window (in seconds)
-altitude = 80.0  # flight altitude (in meters)
+altitude = 150.0  # flight altitude (in meters)
 
 # Reward function
 reward = SampleValues(
@@ -239,19 +238,20 @@ for i in range(outer_iter):
 
         # Get predicted environment maxima
         xm, ym, zm = mtt.get_maxima(start_time, z=[altitude])
+        thm = curhead.heading(start_time) * 180. / np.pi
 
         # Create planner
         planners.append(TrajectoryOpt(
             mtt,
             traj_generator,
             reward,
-            x0=(200., 200., 0., xm, ym),  # (lh, lw, rot, origin_x, origin_y)
+            x0=(220., 220., 0., xm, ym),  # (lh, lw, rot, origin_x, origin_y)
             param_bounds=[(20., 500), (20., 500.), (-360., 360.), (-100., 500.), (-100., 500.)],
             param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
             budget=budget,
             limits=[-100., 500., -100., 500.],
             max_iters=plan_iter,
-            experiment_name=exp_name
+            experiment_name=exp_name,
         ))
         print("Done.")
 

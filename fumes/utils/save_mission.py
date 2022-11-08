@@ -73,17 +73,6 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
     plt.ylabel('Y-coordinate')
     plt.savefig(os.path.join(directory, f"trajectory_snapshot_{iter_num}.png"))
 
-    # plot model, observations and trajectories
-    plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-               env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
-    c = plt.scatter(coords[:, 0], coords[:, 1], c=obs, s=0.1, cmap='bwr', vmin=0., vmax=1.)
-    plt.colorbar(c)
-    plt.axis((env.extent.xrange[0], env.extent.xrange[1],
-             env.extent.yrange[0], env.extent.yrange[1]))
-    plt.xlabel('X-coordinate')
-    plt.ylabel('Y-coordinate')
-    plt.savefig(os.path.join(directory, f"trajectory_snapshot_with_model_{iter_num}.png"))
-
 
 def save_experiment_visualsnapshot_atT(experiment_name, iter_num, rob, model, env, traj_opt, trajectory, reward, simulation, experiment_dict, T):
     """Takes any definable experimental element and saves to visual snapshot."""
