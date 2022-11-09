@@ -26,11 +26,8 @@ gpytorch = "*"
 sockets = "*"
 visdom = "*"
 kaleido = "*"
-<<<<<<< HEAD
 dill = "*"
-=======
 sklearn = "*"
->>>>>>> dce5f219123989a76cf872ff00eb5e51bb83acbb
 
 [dev-packages]
 

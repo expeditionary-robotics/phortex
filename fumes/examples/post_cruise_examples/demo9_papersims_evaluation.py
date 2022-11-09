@@ -89,14 +89,15 @@ if __name__ == "__main__":
 
             # compute the RMSE between each simulated hour snapshot and the true underlying environment
             # for a random sample of points
+            alt = exp_json["traj_params"]["altitude"]
             all_env_obs = []
             all_mod_obs = []
             for t in snap_times:
                 env_samps = env.get_value(
-                    t=t * 3600., loc=(queryx.flatten(), queryy.flatten(), np.ones_like(queryx.flatten()) * 80.))
+                    t=t * 3600., loc=(queryx.flatten(), queryy.flatten(), np.ones_like(queryx.flatten()) * alt))
                 all_env_obs.append(env_samps > 1e-5)
                 mod_samps = mod.get_value(
-                    t=t * 3600., loc=(queryx.flatten(), queryy.flatten(), np.ones_like(queryx.flatten()) * 80.))
+                    t=t * 3600., loc=(queryx.flatten(), queryy.flatten(), np.ones_like(queryx.flatten()) * alt))
                 all_mod_obs.append(mod_samps > 1e-5)
             rmse = np.sqrt(np.mean((np.asarray(all_env_obs).flatten().astype(
                 float) - np.asarray(all_mod_obs).flatten().astype(float))**2))
@@ -163,7 +164,7 @@ if __name__ == "__main__":
                    ITER_NUMS,
                    showmeans=False,
                    showmedians=True)
-    plt.hlines(y=[8735], xmin=[0], xmax=[4], colors=["r"])
+    plt.hlines(y=[7308], xmin=[0], xmax=[4], colors=["r"])
     plt.xlabel("Iteration Number")
     plt.ylabel("Total Positive Detections")
     plt.savefig(os.path.join(SAVE_DIRECTORY, f"total_detects.svg"))
@@ -173,7 +174,7 @@ if __name__ == "__main__":
                    ITER_NUMS,
                    showmeans=False,
                    showmedians=True)
-    plt.hlines(y=[0.202], xmin=[0], xmax=[4], colors=["r"])
+    plt.hlines(y=[0.169], xmin=[0], xmax=[4], colors=["r"])
     plt.xlabel("Iteration Number")
     plt.ylabel("Proportion Positive Detections")
     plt.savefig(os.path.join(SAVE_DIRECTORY, f"prop_detects.svg"))

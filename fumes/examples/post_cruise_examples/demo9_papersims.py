@@ -245,11 +245,11 @@ for i in range(outer_iter):
             mtt,
             traj_generator,
             reward,
-            x0=(220., 220., 0., xm, ym),  # (lh, lw, rot, origin_x, origin_y)
+            x0=(100., 430., thm, xm, ym),  # (lh, lw, rot, origin_x, origin_y)
             param_bounds=[(20., 500), (20., 500.), (-360., 360.), (-100., 500.), (-100., 500.)],
             param_names={"lh": 0, "lw": 1, "rot": 2, "origin_x": 3, "origin_y": 4},
             budget=budget,
-            limits=[-100., 500., -100., 500.],
+            limits=[-np.inf, np.inf, -np.inf, np.inf],
             max_iters=plan_iter,
             experiment_name=exp_name,
         ))

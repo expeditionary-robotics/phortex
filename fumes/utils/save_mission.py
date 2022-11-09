@@ -43,7 +43,7 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
         # plot underlying environment
         env_snapshot = env.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
         plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                            env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("Environment Snapshot")
@@ -53,7 +53,7 @@ def save_experiment_visualsnapshot(experiment_name, iter_num, rob, model, env, t
         # plot learned model
         mod_snapshot = model.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
         plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                            env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("Model Snapshot")
@@ -85,7 +85,7 @@ def save_experiment_visualsnapshot_atT(experiment_name, iter_num, rob, model, en
         # plot underlying environment
         env_snapshot = env.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
         plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                            env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("Environment Snapshot")
@@ -95,7 +95,7 @@ def save_experiment_visualsnapshot_atT(experiment_name, iter_num, rob, model, en
         # plot learned model
         mod_snapshot = model.get_snapshot(t=st, z=[trajectory.altitude], from_cache=False)
         plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
-                env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
+                                                            env.extent.xrange[1], env.extent.yrange[0], env.extent.yrange[1]))
         plt.xlabel('X-coordinate')
         plt.ylabel('Y-coordinate')
         plt.title("Model Snapshot")
@@ -129,7 +129,10 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
     json_traj_dict = trajectory._json_stats()
     json_reward_dict = reward._json_stats()
     json_sim_dict = simulation._json_stats()
-    json_traj_opt_dict = traj_opt._json_stats()
+    if traj_opt is None:
+        json_traj_opt_dict = {}
+    else:
+        json_traj_opt_dict = traj_opt._json_stats()
 
     # Save a pickle snapshot of everything
     pickle.dump(env, open(os.path.join(directory, f"env_{iter_num}.pkl"), "wb"))
@@ -138,8 +141,8 @@ def save_experiment_json(experiment_name, iter_num, rob, model, env, traj_opt, t
     pickle.dump(trajectory, open(os.path.join(directory, f"traj_{iter_num}.pkl"), "wb"))
     pickle.dump(reward, open(os.path.join(directory, f"reward_{iter_num}.pkl"), "wb"))
     pickle.dump(simulation, open(os.path.join(directory, f"sim_{iter_num}.pkl"), "wb"))
-    pickle.dump(traj_opt, open(os.path.join(directory, f"traj_opt_{iter_num}.pkl"), "wb"))
-
+    if traj_opt is not None:
+        pickle.dump(traj_opt, open(os.path.join(directory, f"traj_opt_{iter_num}.pkl"), "wb"))
 
     # Save the pickle locations for easy access later
     json_pickle_dict = {"env_path": os.path.join(directory, f"env_{iter_num}.pkl"),

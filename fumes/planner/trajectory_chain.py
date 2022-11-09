@@ -52,12 +52,11 @@ class TrajectoryChain(Planner):
                 # Except to 2D get_maxima function
                 xm, ym = self.planners[0].env_model.get_maxima(t)
                 thm = self.planners[0].env_model.curr_head_sampler.heading(t) * 180. / np.pi
-
             # Set the initial parameter values based on the environment maximum
             x0 = list(planner.x0)
             x0[planner.param_names["origin_x"]] = xm
             x0[planner.param_names["origin_y"]] = ym
-            # x0[planner.param_names["rot"]] = thm
+            x0[planner.param_names["rot"]] = thm
             planner.x0 = tuple(x0)
 
             # Get the next trajectory in the chain

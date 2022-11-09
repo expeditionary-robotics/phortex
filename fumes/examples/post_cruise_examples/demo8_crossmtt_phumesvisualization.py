@@ -29,12 +29,13 @@ from fumes.simulator import Simulator
 
 from fumes.utils.save_mission import save_experiment_json, save_experiment_visualsnapshot_atT
 
-# E_alpha:0.14731761054041068, E_beta:0.10540189607026254, V:0.5144557054857927, A:0.3028688599354139
-# E_alpha:0.15026115417029667, E_beta:0.13921694335379634, V:0.6672301198899803, A:0.21518419081437928
+# E_alpha:0.16030202074432714, E_beta:0.12794249764498875, V:0.863318393984982, A:0.18334792658835436
+# alpha_prior: 0.15, beta_prior: 0.13, vel_prior: 0.775, area_prior: 0.275
+# alpha_true: 0.12, beta_true: 0.1, vel_true: 0.4, area_true: 0.1
 
 # Set meta/saving parameters
 code_test = False
-experiment_name = f"tests_local_phumes_seed{np.random.randint(low=0, high=1000)}"
+experiment_name = f"naivebaseline_local_phumes_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/{experiment_name}")
 model_directory = os.path.join(os.getenv("FUMES_OUTPUT"), f"modeling/{experiment_name}")
@@ -55,7 +56,7 @@ if code_test:
 else:
     sample_iter = 200  # number of samples to search over
     burn = 50  # number of burn-in samples
-    samp_dist = 0.5  # distance between samples (in meters)
+    samp_dist = 1.0  # distance between samples (in meters)
     time_resolution = 3600  # time resolution (in seconds)
     duration = 12 * 3600  # total mission time (in seconds)
     num_snaps = 12
@@ -76,12 +77,12 @@ rho0 = eos_rho(t0, s0)  # source density
 E = (0.12, 0.1)
 
 # Inferred Source Params
-v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
     np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.1)
 v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
-a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.01).fit(
+a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
     np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
 a0_prop = sp.stats.norm(loc=0, scale=0.1)
 a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
@@ -115,7 +116,7 @@ plt.title("Beta Samples")
 plt.savefig(os.path.join(model_directory, "beta_distribution_init.svg"))
 plt.close()
 
-plt.plot(np.linspace(0, 1, 100), v0_param.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
+plt.plot(np.linspace(0, 2, 100), v0_param.predict(np.linspace(0, 2, 100)), linewidth=3, alpha=0.5)
 plt.vlines(v0, 0, 10, colors="red", linestyles="--")
 plt.xlabel("Velocity Sample Values")
 plt.ylabel("PDF")
@@ -158,7 +159,7 @@ resolution = 15.  # lawnmower resolution (in meters)
 # Robot params
 vel = 0.5  # robot velocity (in meters/second)
 com_window = 120  # communication window (in seconds)
-altitude = 70.0  # flight altitude (in meters)
+altitude = 150.0  # flight altitude (in meters)
 
 # Reward function
 reward = SampleValues(
@@ -261,28 +262,28 @@ print("Total samples: ", len(obs))
 print("Total obs: ", np.nansum(obs))
 obs_t = np.unique(np.round(times / 3600.))  # get snapshots by hour
 print(obs_t)
-obs_c = []
-obs_o = []
-for j, ot in enumerate(obs_t):
-    idt = np.round(times / 3600.) == ot
-    obs_c.append((simulator.coords[idt, 0], simulator.coords[idt, 1], simulator.coords[idt, 2]))
-    obs_o.append(obs[idt])
-newAlph, newBet, newVelocity, newArea = mtt.update(obs_t * 3600.,
-                                                   np.asarray(obs_c),
-                                                   np.asarray(obs_o),
-                                                   num_samps=sample_iter,
-                                                   burnin=burn,
-                                                   thresh=thresh)
-print(f"E_alpha:{newAlph}, E_beta:{newBet}, V:{newVelocity}, A:{newArea}")
+# obs_c = []
+# obs_o = []
+# for j, ot in enumerate(obs_t):
+#     idt = np.round(times / 3600.) == ot
+#     obs_c.append((simulator.coords[idt, 0], simulator.coords[idt, 1], simulator.coords[idt, 2]))
+#     obs_o.append(obs[idt])
+# newAlph, newBet, newVelocity, newArea = mtt.update(obs_t * 3600.,
+#                                                    np.asarray(obs_c),
+#                                                    np.asarray(obs_o),
+#                                                    num_samps=sample_iter,
+#                                                    burnin=burn,
+#                                                    thresh=thresh)
+# print(f"E_alpha:{newAlph}, E_beta:{newBet}, V:{newVelocity}, A:{newArea}")
 
-mod_3d_snapshot = mtt.odesys.get_pointcloud(t=0.)
-new_mod_fig = go.Scatter3d(x=mod_3d_snapshot[:, 0],
-                           y=mod_3d_snapshot[:, 1],
-                           z=mod_3d_snapshot[:, 2],
-                           mode="markers",
-                           marker=dict(size=0.5, opacity=0.7, color='lightpink'),
-                           name=f"Updated Model Plume at t=0.")
-fig = go.Figure(data=[env_fig, mod_fig, new_mod_fig], layout=layout)
+# mod_3d_snapshot = mtt.odesys.get_pointcloud(t=0.)
+# new_mod_fig = go.Scatter3d(x=mod_3d_snapshot[:, 0],
+#                            y=mod_3d_snapshot[:, 1],
+#                            z=mod_3d_snapshot[:, 2],
+#                            mode="markers",
+#                            marker=dict(size=0.5, opacity=0.7, color='lightpink'),
+#                            name=f"Updated Model Plume at t=0.")
+# fig = go.Figure(data=[env_fig, mod_fig, new_mod_fig], layout=layout)
 
 # Log information
 experiment_dict = {"experiment_iteration": 1,
@@ -314,4 +315,4 @@ save_experiment_visualsnapshot_atT(experiment_name,
                                    simulation=simulator,
                                    experiment_dict=experiment_dict,
                                    T=np.linspace(0, duration + 1, 12))
-fig.show()
+# fig.show()

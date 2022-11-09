@@ -6,7 +6,7 @@ from scipy.optimize import NonlinearConstraint, LinearConstraint
 # If True, the optimization is constrained to keep the solution feasbile
 # at each iteration. In practice, this seems to really hurt optimizer
 # performance. Recommended to set to False.
-KEEP_FEASIBLE = False
+KEEP_FEASIBLE = True
 THRESH_BUDGET_LB = 0.80
 
 
