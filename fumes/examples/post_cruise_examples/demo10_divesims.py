@@ -25,7 +25,7 @@ from fumes.robot import OfflineRobot
 from fumes.simulator import Simulator
 from fumes.trajectory.lawnmower import Lawnmower
 from fumes.planner import TrajectoryOpt, TrajectoryChain, LawnSpiralWithStartGeneratorFlexible
-from fumes.utils.save_mission import save_experiment_json, save_experiment_visualsnapshot
+from fumes.utils.save_mission import save_experiment_json, save_experiment_visualsnapshot_atT
 
 
 # Set meta/saving parameters
@@ -251,6 +251,8 @@ for i in range(outer_iter):
     altitude = sampling_heights[i]  # flight altitude (in meters)
 
     if i == 0:
+        planners = []
+        traj_opt_saver = None
         plan_opt = Lawnmower(t0=0,
                              vel=vel,
                              lh=500,
@@ -263,7 +265,6 @@ for i in range(outer_iter):
         print("Plan in place!")
     else:
         # Build trajectory optimizer
-        planners = []
         budget = time_resolution * vel  # distance budget per leg
         for start_time in np.arange(0, duration, step=time_resolution):
             # Create the base trajectory generator object with a temporary start_point
@@ -297,6 +298,7 @@ for i in range(outer_iter):
         print("Planners chained! Now getting plan...")
         plan_opt = planner.get_plan()
         print("Plan in place!")
+        traj_opt_saver = planners[0]
 
     # Create the robot
     rob = OfflineRobot(mtt, plan_opt, env, vel, com_window)
@@ -349,22 +351,23 @@ for i in range(outer_iter):
                          rob=rob,
                          model=mtt,
                          env=env,
-                         traj_opt=planners[0],
+                         traj_opt=traj_opt_saver,
                          trajectory=plan_opt,
                          reward=reward,
                          simulation=simulator,
                          experiment_dict=experiment_dict)
 
-    save_experiment_visualsnapshot(experiment_name,
-                                   iter_num=i,
-                                   rob=rob,
-                                   model=mtt,
-                                   env=env,
-                                   traj_opt=planners,
-                                   trajectory=plan_opt,
-                                   reward=reward,
-                                   simulation=simulator,
-                                   experiment_dict=experiment_dict)
+    save_experiment_visualsnapshot_atT(experiment_name,
+                                       iter_num=i,
+                                       rob=rob,
+                                       model=mtt,
+                                       env=env,
+                                       traj_opt=None,
+                                       trajectory=plan_opt,
+                                       reward=reward,
+                                       simulation=simulator,
+                                       experiment_dict=experiment_dict,
+                                       T=snap_times)
 
     plt.close()
     fig, ax = plt.subplots(2, 1)
