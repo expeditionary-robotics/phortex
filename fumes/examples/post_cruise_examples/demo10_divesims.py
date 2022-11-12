@@ -54,7 +54,7 @@ else:
     time_resolution = 3 * 3600  # time resolution (in seconds)
     duration = 12 * 3600  # total mission time (in seconds)
     num_snaps = 4
-    sampling_heights = [80., 80., 80.]
+    sampling_heights = [100., 100., 100.]
 
 ####
 # "Global" Model Parameters
@@ -68,20 +68,20 @@ rhoprof = eos_rho  # function that computes density as func of S, T
 ####
 # True Source Params
 ####
-v0 = 0.4  # source exit velocity
-a0 = 0.1  # source area
+v0 = 0.6  # source exit velocity
+a0 = 0.8  # source area
 s0 = 34.608  # source salinity
 t0 = 300  # source temperature
 rho0 = eos_rho(t0, s0)  # source density
-E = (0.12, 0.1)
+E = (0.15, 0.2)
 
 ####
 # Inferred Source Params
 ####
 v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
-    np.random.uniform(0.05, 2.95, 5000)[:, np.newaxis])
+    np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.1)
-v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
+v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 1.55))
 
 a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
     np.random.uniform(0.05, 0.95, 5000)[:, np.newaxis])
@@ -89,14 +89,14 @@ a0_prop = sp.stats.norm(loc=0, scale=0.1)
 a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 0.25, 5000)[:, np.newaxis])
+    np.random.uniform(0.11, 0.21, 5000)[:, np.newaxis])
 alph_prop = sp.stats.norm(loc=0, scale=0.05)
-alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
+alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.1, 0.22))
 
 bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 0.45, 5000)[:, np.newaxis])
+    np.random.uniform(0.11, 0.21, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
-bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
+bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.1, 0.22))
 
 #####
 # Plot Initial Source Params

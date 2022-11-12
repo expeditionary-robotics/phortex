@@ -955,8 +955,10 @@ class Crossflow(MTT):
                             "model_learned_params":
                             {"velocity_mle": np.mean(self.v0.sample(5000)),
                              "velocity_distribution": self.v0.get_attributes(),
+                             "velocity_samples": self.v0.sample(1000).tolist(),
                              "area_mle": np.mean(self.a0.sample(5000)),
                              "area_distribution": self.a0.get_attributes(),
+                             "area_samples": self.a0.sample(1000).tolist(),
                              "entrainment_alpha_mle": np.mean(self.entrainment[0].sample(5000)),
                              "entrainment_alpha_distribution": self.entrainment[0].get_attributes(),
                              "entrainment_beta_mle": np.mean(self.entrainment[1].sample(5000)),
@@ -1067,7 +1069,7 @@ class Crossflow(MTT):
         prior_Bet = self.entrainment[1].predict(Bets)
         prior_V = self.v0.predict(Vs)
         prior_A = self.a0.predict(As)
-        prop_samp_prob = np.nanmean(err_br) + np.log(prior_Alph) + np.log(prior_Bet) + np.log(prior_V) + np.log(prior_A)
+        prop_samp_prob = np.nanmean(err_br) - np.log(prior_Alph) - np.log(prior_Bet) - np.log(prior_V) - np.log(prior_A)
         return prop_samp_prob
 
     def _model_sample_chain(self, mod, last_samp, t, loc, obs, thresh=1e-5):
@@ -1198,9 +1200,9 @@ class Crossflow(MTT):
 
                 prop_samp, prop_samp_prob = self._model_sample_chain(
                     enviro, last_samp, t, loc, obs, thresh=thresh)
-                if prop_samp_prob < last_samp_prob:
-                    rho = min(1, np.exp(prop_samp_prob - last_samp_prob))
-                    print(np.exp(prop_samp_prob - last_samp_prob))
+                if prop_samp_prob > last_samp_prob:
+                    rho = min(1, np.exp(last_samp_prob - prop_samp_prob))
+                    print(np.exp(last_samp_prob - prop_samp_prob))
                     u = np.random.uniform()
                     if u < rho:
                         naccept += 1

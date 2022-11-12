@@ -177,12 +177,12 @@ class ParameterKDE(Parameter):
                 pdf_fitted = np.exp(self.dist.score_samples(np.asarray([X])[:, np.newaxis]))
                 return pdf_fitted
             else:
-                return 0.
+                return 0.01
         else:
             X = np.asarray(X)
             mask = (X >= self.limits[0]) & (X <= self.limits[1])
             pdf_fitted = np.exp(self.dist.score_samples(X[:, np.newaxis]))
-            pdf_fitted[~mask] = 0.0
+            pdf_fitted[~mask] = 0.01
             return pdf_fitted
 
     def get_attributes(self):
