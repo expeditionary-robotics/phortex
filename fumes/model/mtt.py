@@ -909,6 +909,7 @@ class Crossflow(MTT):
         self.update_thresh = None
         self.used_grid = None
         self.prediction_num_samps = None
+        self.chain = None
 
     def get_parameters(self):
         """Returns the parameters defining the model."""
@@ -971,6 +972,7 @@ class Crossflow(MTT):
                              "update_burnin": self.update_burnin,
                              "update_thresh": self.update_thresh,
                              "used_grid": self.used_grid,
+                             "chain_samples": self.chain.tolist(),
                              },
                             "model_prediction_procedure":
                             {"prediction_samples": self.prediction_num_samps,
@@ -1220,6 +1222,7 @@ class Crossflow(MTT):
             self.entrainment[1].update(samples[burnin:, 1])
             self.v0.update(samples[burnin:, 2])
             self.a0.update(samples[burnin:, 3])
+            self.chain = samples
             
             print("Number of accepted samples in chain:", naccept)
             plt.plot(range(len(accept_tracker)), accept_tracker)
