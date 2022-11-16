@@ -9,6 +9,7 @@ from os import EX_DATAERR
 from matplotlib.artist import allow_rasterization
 import numpy as np
 from numpy.ma.core import multiply
+from sklearn.neighbors import KernelDensity
 import copy
 import json
 import os
@@ -938,7 +939,14 @@ class Crossflow(MTT):
 
         if t is None:
             t = np.linspace(0, 3600 * 24, 25)
-
+        mode_data = np.asarray([self.v0.sample(5000),
+                                self.a0.sample(5000),
+                                self.entrainment[0].sample(5000),
+                                self.entrainment[1].sample(5000)]).reshape(4, 5000)
+        kde = KernelDensity(kernel='gaussian',
+                            bandwidth=0.5).fit(mode_data)
+        height = np.exp(kde.score_samples(mode_data[:][:]))
+        maps = mode_data[:][:][np.argmax(height)]
         json_config_dict = {"model_fixed_params":
                             {"model_type": "crossflow",
                              "model_name": self.NAME,
@@ -954,15 +962,15 @@ class Crossflow(MTT):
                              "t": t.tolist(),
                              },
                             "model_learned_params":
-                            {"velocity_mle": np.mean(self.v0.sample(5000)),
+                            {"velocity_mle": maps[0],
                              "velocity_distribution": self.v0.get_attributes(),
                              "velocity_samples": self.v0.sample(1000).tolist(),
-                             "area_mle": np.mean(self.a0.sample(5000)),
+                             "area_mle": maps[1],
                              "area_distribution": self.a0.get_attributes(),
                              "area_samples": self.a0.sample(1000).tolist(),
-                             "entrainment_alpha_mle": np.mean(self.entrainment[0].sample(5000)),
+                             "entrainment_alpha_mle": maps[2],
                              "entrainment_alpha_distribution": self.entrainment[0].get_attributes(),
-                             "entrainment_beta_mle": np.mean(self.entrainment[1].sample(5000)),
+                             "entrainment_beta_mle": maps[3],
                              "entrainment_beta_distribution": self.entrainment[1].get_attributes(),
                              "curr_magnitude": self.curr_mag_sampler.get_attributes(),
                              "curr_heading": self.curr_head_sampler.get_attributes(),
@@ -1013,10 +1021,20 @@ class Crossflow(MTT):
         Args:
             t (float): global time to set internal models to.
         """
-        self.odesys.v0 = np.mean(self.v0.sample(5000))
-        self.odesys.a0 = np.mean(self.a0.sample(5000))
-        self.odesys.entrainment = (np.mean(self.entrainment[0].sample(5000)),
-                                   np.mean(self.entrainment[1].sample(5000)))
+        mode_data = np.asarray([self.v0.sample(5000),
+                                self.a0.sample(5000),
+                                self.entrainment[0].sample(5000),
+                                self.entrainment[1].sample(5000)]).reshape(4, 5000)
+        print(mode_data.shape)
+        kde = KernelDensity(kernel='gaussian',
+                            bandwidth=0.05).fit(mode_data[:][:])
+        height = np.exp(kde.score_samples(mode_data[:][:]))
+        maps = mode_data[:][:][np.argmax(height)]
+        print(maps)
+        self.odesys.v0 = maps[0]
+        self.odesys.a0 = maps[1]
+        self.odesys.entrainment = (maps[2],
+                                   maps[3])
         self.odesys.solve(t, overwrite=overwrite)
 
     def _compute_sample_prob(self, mod, Alphs, Bets, Vs, As, t,
@@ -1333,9 +1351,9 @@ class Crossflow(MTT):
 
         self.odesys._model = {}  # clean out old environment
         self.solve(t=t[-1], overwrite=True)  # now update environment
-        return np.mean(self.entrainment[0].sample(5000)), \
-            np.mean(self.entrainment[1].sample(5000)), \
-            np.mean(self.v0.sample(5000)), np.mean(self.a0.sample(5000))
+        return sp.stats.mode(self.entrainment[0].sample(5000))[0], \
+            sp.stats.mode(self.entrainment[1].sample(5000))[0], \
+            sp.stats.mode(self.v0.sample(5000))[0], sp.stats.mode(self.a0.sample(5000))[0]
 
     def _sample_param_posterior(self, num_samples=100):
         """Return samples from unknowns."""
