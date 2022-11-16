@@ -942,7 +942,7 @@ class Crossflow(MTT):
         mode_data = np.asarray([self.v0.sample(5000),
                                 self.a0.sample(5000),
                                 self.entrainment[0].sample(5000),
-                                self.entrainment[1].sample(5000)]).reshape(4, 5000)
+                                self.entrainment[1].sample(5000)]).reshape(5000, 4)
         kde = KernelDensity(kernel='gaussian',
                             bandwidth=0.5).fit(mode_data)
         height = np.exp(kde.score_samples(mode_data[:][:]))
@@ -1024,7 +1024,7 @@ class Crossflow(MTT):
         mode_data = np.asarray([self.v0.sample(5000),
                                 self.a0.sample(5000),
                                 self.entrainment[0].sample(5000),
-                                self.entrainment[1].sample(5000)]).reshape(4, 5000)
+                                self.entrainment[1].sample(5000)]).reshape(5000, 4)
         print(mode_data.shape)
         kde = KernelDensity(kernel='gaussian',
                             bandwidth=0.05).fit(mode_data[:][:])
