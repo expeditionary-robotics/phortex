@@ -942,9 +942,9 @@ class Crossflow(MTT):
         mode_data = np.asarray([self.v0.sample(5000),
                                 self.a0.sample(5000),
                                 self.entrainment[0].sample(5000),
-                                self.entrainment[1].sample(5000)]).reshape(5000, 4)
+                                self.entrainment[1].sample(5000)]).T[0]
         kde = KernelDensity(kernel='gaussian',
-                            bandwidth=0.5).fit(mode_data)
+                            bandwidth=0.05).fit(mode_data[:][:])
         height = np.exp(kde.score_samples(mode_data[:][:]))
         maps = mode_data[:][:][np.argmax(height)]
         json_config_dict = {"model_fixed_params":
@@ -1024,13 +1024,11 @@ class Crossflow(MTT):
         mode_data = np.asarray([self.v0.sample(5000),
                                 self.a0.sample(5000),
                                 self.entrainment[0].sample(5000),
-                                self.entrainment[1].sample(5000)]).reshape(5000, 4)
-        print(mode_data.shape)
+                                self.entrainment[1].sample(5000)]).T[0]
         kde = KernelDensity(kernel='gaussian',
                             bandwidth=0.05).fit(mode_data[:][:])
         height = np.exp(kde.score_samples(mode_data[:][:]))
         maps = mode_data[:][:][np.argmax(height)]
-        print(maps)
         self.odesys.v0 = maps[0]
         self.odesys.a0 = maps[1]
         self.odesys.entrainment = (maps[2],
@@ -1351,9 +1349,11 @@ class Crossflow(MTT):
 
         self.odesys._model = {}  # clean out old environment
         self.solve(t=t[-1], overwrite=True)  # now update environment
-        return sp.stats.mode(self.entrainment[0].sample(5000))[0], \
-            sp.stats.mode(self.entrainment[1].sample(5000))[0], \
-            sp.stats.mode(self.v0.sample(5000))[0], sp.stats.mode(self.a0.sample(5000))[0]
+        kde = KernelDensity(kernel='gaussian',
+                            bandwidth=0.05).fit(self.chain[:][burnin:])
+        height = np.exp(kde.score_samples(self.chain[:][burnin:]))
+        maps = self.chain[:][burnin:][np.argmax(height)]
+        return maps[0], maps[1], maps[2], maps[3]
 
     def _sample_param_posterior(self, num_samples=100):
         """Return samples from unknowns."""
