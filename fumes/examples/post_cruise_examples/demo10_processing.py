@@ -46,7 +46,7 @@ if not os.path.exists(SAVE_DIRECTORY):
     os.makedirs(SAVE_DIRECTORY)
 EXP_PREFIX = ["cloud_map100_iterativeplans_seed",
               "cloud_map120_iterativeplans_seed", "cloud_map150_iterativeplans_seed"]
-EXPS_TO_PROCESS = [["227", "244", "260", "541", "648", "670", "809", "986"],  # 100
+EXPS_TO_PROCESS = [["227", "244", "260", "541", "648", "670", "809", "986", "658", "572"],  # 100
                    ["37", "134", "378", "447", "693", "780", "884", "938", "950", "32"],  # 120
                    ["45", "52", "279", "336", "382", "450", "575", "610", "699", "702"]]  # 150
 LABELS = ["100m", "120m", "150m"]
@@ -54,6 +54,8 @@ ITER_NUMS = [0, 1, 2]
 
 # set number of samples for prediction generation
 NUM_FORECAST_SAMPS = 10
+RANDOM_SEED = 219
+np.random.seed(RANDOM_SEED)
 
 # set the z-axis for computing error
 QUERYZ = [100., 120., 150.]
