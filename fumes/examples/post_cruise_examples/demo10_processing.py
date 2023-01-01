@@ -27,7 +27,7 @@ def set_axis_style(ax, labels):
     ax.set_xlabel('Experiment')
 
 
-def make_violinplot(numrows, data, labels, ylabel, savename, with_hline=None):
+def make_violinplot(numrows, data, labels, ylabel, savename, with_hline=None, lims=None):
     fig, ax = plt.subplots(numrows, 1, sharey=True)
     for i in range(numrows):
         ax[i].violinplot(data[i],
@@ -37,28 +37,30 @@ def make_violinplot(numrows, data, labels, ylabel, savename, with_hline=None):
         ax[i].set_ylabel(ylabel)
         if with_hline is not None:
             ax[i].hlines([with_hline], [0], [len(labels[i]) + 1], color="red")
+        if lims is not None:
+            ax[i].set_ylim(lims)
     plt.savefig(os.path.join(SAVE_DIRECTORY, f"{savename}.svg"))
     plt.close()
 
 
-SAVE_DIRECTORY = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/paperplots_150120100")
+SAVE_DIRECTORY = os.path.join(os.getenv("FUMES_OUTPUT"), f"simulations/paperplots_150100")
 if not os.path.exists(SAVE_DIRECTORY):
     os.makedirs(SAVE_DIRECTORY)
 EXP_PREFIX = ["cloud_map100_iterativeplans_seed",
-              "cloud_map120_iterativeplans_seed", "cloud_map150_iterativeplans_seed"]
+              "cloud_map150_iterativeplans_seed"]
 EXPS_TO_PROCESS = [["227", "244", "260", "541", "648", "670", "809", "986", "658", "572"],  # 100
-                   ["37", "134", "378", "447", "693", "780", "884", "938", "950", "32"],  # 120
+                #    ["37", "134", "378", "447", "693", "780", "884", "938", "950", "32"],  # 120
                    ["45", "52", "279", "336", "382", "450", "575", "610", "699", "702"]]  # 150
-LABELS = ["100m", "120m", "150m"]
+LABELS = ["100m", "150m"]
 ITER_NUMS = [0, 1, 2]
 
 # set number of samples for prediction generation
 NUM_FORECAST_SAMPS = 10
-RANDOM_SEED = 219
+RANDOM_SEED = 19
 np.random.seed(RANDOM_SEED)
 
 # set the z-axis for computing error
-QUERYZ = [100., 120., 150.]
+QUERYZ = [100., 125., 150.]
 
 # set the horizontal resolution for computing error
 EXTENT = Extent(xrange=(-100., 500.),
@@ -303,6 +305,12 @@ if __name__ == "__main__":
                 sim_obs = np.asarray(exp_json["simulation_params"]["obs"])
                 sim_coords = exp_json["simulation_params"]["coords"]
 
+                # plt.scatter([c[0] for c in sim_coords], [c[1] for c in sim_coords], c=(sim_obs > 1e-5), cmap="copper", s=0.1)
+                # plt.scatter(0, 0, c="red", marker="*")
+                # plt.gca().axis("equal")
+                # plt.gca().set(xlim=(-100, 600), ylim=(-100, 600))
+                # plt.show()
+
                 # grab spatial extent (furthest detecton over furthest distance)
                 distances = np.asarray([np.sqrt((coord[0])**2 + (coord[1])**2)
                                        for coord in sim_coords])
@@ -348,8 +356,8 @@ if __name__ == "__main__":
     
     make_violinplot(len(EXPS_TO_PROCESS), rmse_violin, violin_labels, "RMSE", "rmse")
     make_violinplot(len(EXPS_TO_PROCESS), ce_violin, violin_labels, "Class Error", "ce")
-    make_violinplot(len(EXPS_TO_PROCESS), iou_violin, violin_labels, "IoU", "iou")
-    make_violinplot(len(EXPS_TO_PROCESS), ioa_violin, violin_labels, "IoA", "ioa")    
+    make_violinplot(len(EXPS_TO_PROCESS), iou_violin, violin_labels, "IoU", "iou", None, [-0.05, 1.05])
+    make_violinplot(len(EXPS_TO_PROCESS), ioa_violin, violin_labels, "IoA", "ioa", None, [-0.05, 1.05])    
     make_violinplot(len(EXPS_TO_PROCESS), area_violin,
                     violin_labels, "area", "area", with_hline=env.a0)
     make_violinplot(len(EXPS_TO_PROCESS), velocity_violin, violin_labels,

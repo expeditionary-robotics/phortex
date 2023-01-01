@@ -58,49 +58,49 @@ class TrajectoryChain(Planner):
             x0[planner.param_names["origin_y"]] = ym
             x0[planner.param_names["rot"]] = thm
 
-            if self.planners[i].traj_generator.start_point is not None: 
-                # Ensure the travel distance + lawnmower size <= budget
-                xs = self.planners[i].traj_generator.start_point[0]
-                ys = self.planners[i].traj_generator.start_point[1]
-                xo = self.planners[i].x0[planner.param_names["origin_x"]]
-                yo = self.planners[i].x0[planner.param_names["origin_y"]]
-                dist = np.sqrt((xs - xo)**2 + (ys - yo)**2)
+            # if self.planners[i].traj_generator.start_point is not None: 
+            #     # Ensure the travel distance + lawnmower size <= budget
+            #     xs = self.planners[i].traj_generator.start_point[0]
+            #     ys = self.planners[i].traj_generator.start_point[1]
+            #     xo = self.planners[i].x0[planner.param_names["origin_x"]]
+            #     yo = self.planners[i].x0[planner.param_names["origin_y"]]
+            #     dist = np.sqrt((xs - xo)**2 + (ys - yo)**2)
 
-                # Remaining budget after traveling to the origin 
-                rem = self.planners[i].budget - dist
+            #     # Remaining budget after traveling to the origin 
+            #     rem = self.planners[i].budget - dist
 
-                # Lawnmower resolution 
-                res = self.planners[i].traj_generator.res
+            #     # Lawnmower resolution 
+            #     res = self.planners[i].traj_generator.res
 
-                def lawn_length(lw, lh, res):
-                    """Length of a lawnmower of a given lw, lw, and res"""
-                    return lw * (lh // res + 1.0) + lh
+            #     def lawn_length(lw, lh, res):
+            #         """Length of a lawnmower of a given lw, lw, and res"""
+            #         return lw * (lh // res + 1.0) + lh
 
-                # Length of the current lawnmower 
-                lw = self.planners[i].x0[planner.param_names["lw"]] 
-                lh = self.planners[i].x0[planner.param_names["lh"]] 
-                cur_len = lawn_length(lw, lh, res)
+            #     # Length of the current lawnmower 
+            #     lw = self.planners[i].x0[planner.param_names["lw"]] 
+            #     lh = self.planners[i].x0[planner.param_names["lh"]] 
+            #     cur_len = lawn_length(lw, lh, res)
 
-                def lawn_under_budget(budget, res):
-                    """ Compute the largest squre lanwmower that satisfies the budget, 
-                    assuming that lw = lh and res is fixed.
+            #     def lawn_under_budget(budget, res):
+            #         """ Compute the largest squre lanwmower that satisfies the budget, 
+            #         assuming that lw = lh and res is fixed.
 
-                    Solves:
-                        budget = lw * (lh // res + 1.0) + lh
-                        budget = lw * (lw // res + 1.0) + lw
+            #         Solves:
+            #             budget = lw * (lh // res + 1.0) + lh
+            #             budget = lw * (lw // res + 1.0) + lw
 
-                        budget = lw**2 // res + lw + lw
-                        0 = lw**2 // res + 2 * lw  - budget
+            #             budget = lw**2 // res + lw + lw
+            #             0 = lw**2 // res + 2 * lw  - budget
 
-                        Solve quadratic equation .
-                    """ 
-                    lw = (-2.0 + np.sqrt(4.0 + (4.0 * budget) / res)) / (2.0 / res)
-                    return lw
+            #             Solve quadratic equation .
+            #         """ 
+            #         lw = (-2.0 + np.sqrt(4.0 + (4.0 * budget) / res)) / (2.0 / res)
+            #         return lw
 
-                if cur_len > rem: 
-                    lw = lawn_under_budget(rem, res)
-                    x0[planner.param_names["lw"]] = lw
-                    x0[planner.param_names["lh"]] = lh
+            #     if cur_len > rem: 
+            #         lw = lawn_under_budget(rem, res)
+            #         x0[planner.param_names["lw"]] = lw
+            #         x0[planner.param_names["lh"]] = lh
 
             # x0[planner.param_names["rot"]] = thm
             planner.x0 = tuple(x0)

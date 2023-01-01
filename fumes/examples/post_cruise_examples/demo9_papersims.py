@@ -53,6 +53,7 @@ else:
     time_resolution = 3 * 3600  # time resolution (in seconds)
     duration = 12 * 3600  # total mission time (in seconds)
     num_snaps = 4
+    sampling_heights = [80., 100., 120., 140., 160.]
 
 # "Global" Model Parameters
 s = np.linspace(0, 500, 100)  # distance to integrate over
@@ -71,22 +72,22 @@ E = (0.12, 0.1)
 
 # Inferred Source Params
 v0_inf = KernelDensity(kernel='gaussian', bandwidth=0.1).fit(
-    np.random.uniform(0.05, 1.5, 5000)[:, np.newaxis])
+    np.random.uniform(0.05, 2.95, 5000)[:, np.newaxis])
 v0_prop = sp.stats.norm(loc=0, scale=0.1)
 v0_param = ParameterKDE(v0_inf, v0_prop, limits=(0.01, 3.0))
 
 a0_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.05, 0.5, 5000)[:, np.newaxis])
+    np.random.uniform(0.05, 0.95, 5000)[:, np.newaxis])
 a0_prop = sp.stats.norm(loc=0, scale=0.1)
 a0_param = ParameterKDE(a0_inf, a0_prop, limits=(0.01, 1.0))
 
 alph_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.1, 0.2, 5000)[:, np.newaxis])
+    np.random.uniform(0.05, 0.25, 5000)[:, np.newaxis])
 alph_prop = sp.stats.norm(loc=0, scale=0.05)
 alph_param = ParameterKDE(alph_inf, alph_prop, limits=(0.01, 0.3))
 
 bet_inf = KernelDensity(kernel='gaussian', bandwidth=0.05).fit(
-    np.random.uniform(0.01, 0.25, 5000)[:, np.newaxis])
+    np.random.uniform(0.05, 0.45, 5000)[:, np.newaxis])
 bet_prop = sp.stats.norm(loc=0, scale=0.05)
 bet_param = ParameterKDE(bet_inf, bet_prop, limits=(0.01, 0.5))
 
@@ -167,7 +168,6 @@ resolution = 10  # lawnmower resolution (in meters)
 # Robot params
 vel = 0.5  # robot velocity (in meters/second)
 com_window = 120  # communication window (in seconds)
-altitude = 150.0  # flight altitude (in meters)
 
 # Reward function
 reward = SampleValues(
@@ -195,7 +195,7 @@ mtt = Crossflow(plume_loc=(0, 0, 0), extent=extent, s=s,
 ################
 for st in snap_times:
     # plot underlying environment
-    env_snapshot = env.get_snapshot(t=st, z=[altitude], from_cache=False)
+    env_snapshot = env.get_snapshot(t=st, z=sampling_heights, from_cache=False)
     plt.imshow(env_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
                                                         env.extent.xrange[1],
                                                         env.extent.yrange[0],
@@ -207,7 +207,7 @@ for st in snap_times:
     plt.close()
 
     # plot learned model
-    mod_snapshot = mtt.get_snapshot(t=st, z=[altitude], from_cache=False)
+    mod_snapshot = mtt.get_snapshot(t=st, z=sampling_heights, from_cache=False)
     plt.imshow(mod_snapshot[0], origin="lower", extent=(env.extent.xrange[0],
                                                         env.extent.xrange[1],
                                                         env.extent.yrange[0],
@@ -227,6 +227,7 @@ for i in range(outer_iter):
 
     # Build trajectory optimizer
     planners = []
+    altitude = sampling_heights[i]  # flight altitude (in meters)
     budget = time_resolution * vel  # distance budget per leg
     for start_time in np.arange(0, duration, step=time_resolution):
         # Create the base trajectory generator object with a temporary start_point

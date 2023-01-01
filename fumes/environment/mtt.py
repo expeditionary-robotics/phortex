@@ -912,7 +912,7 @@ class CrossflowMTT(StationaryMTT):
         self.q0 = self.lam * self.a0 / np.pi * self.v0  # source heat flux
         self.m0 = self.q0 * self.v0  # source momentum flux
         # source buoyancy flux
-        self.f0 = -self.g * 10**(-4) * (self.t0 - self.tprof(0)) * self.q0
+        self.f0 = -self.g * 10**(-4) * (self.t0 - self.tprof(self.z_offset)) * self.q0
         self.th0 = np.pi / 2.  # source output angle
 
         # Initialize internal variables
@@ -966,7 +966,7 @@ class CrossflowMTT(StationaryMTT):
         # Update params dependent on others
         self.q0 = self.lam * self.a0 / np.pi * self.v0
         self.m0 = self.q0 * self.v0
-        self.f0 = -self.g * 10**(-4) * (self.t0 - self.tprof(0)) * self.q0
+        self.f0 = -self.g * 10**(-4) * (self.t0 - self.tprof(self.z_offset)) * self.q0
         # solve for the stationary plume
         params = (t, self.rho0, self.currents, self.tprof, self.sprof,
                   self.rhoprof, self.lam, self.entrainment,

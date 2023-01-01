@@ -29,7 +29,7 @@ from fumes.utils.save_mission import save_experiment_json, save_experiment_visua
 
 
 # Set meta/saving parameters
-code_test = False
+code_test = True
 experiment_name = f"local_paperdive_iterativeplans_seed{np.random.randint(low=0, high=1000)}"
 print("Experiment Name: ", experiment_name)
 
@@ -40,8 +40,8 @@ if code_test:
     plan_iter = 15  # planning iterations
     outer_iter = 2  # number of traj and model update loops
     samp_dist = 1.0  # distance between samples (in meters)
-    time_resolution = 3600  # time resolution (in seconds)
-    duration = 3 * 3600  # total mission time (in seconds)
+    time_resolution = 100  # time resolution (in seconds)
+    duration = 3 * 100  # total mission time (in seconds)
     num_snaps = 3
     sampling_heights = [80., 120.]
 
@@ -264,6 +264,7 @@ for i in range(outer_iter):
                              noise=None)
         print("Plan in place!")
     else:
+        planners = []
         # Build trajectory optimizer
         budget = time_resolution * vel  # distance budget per leg
         for start_time in np.arange(0, duration, step=time_resolution):
