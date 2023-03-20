@@ -2,6 +2,7 @@
 import os
 import sys
 import numpy as np
+import pandas as pd
 from scipy.spatial.distance import cdist
 import contextlib
 import os
@@ -43,7 +44,7 @@ def A_oscillate(t, A):
 
 
 def theta_oscillate(t):
-    return (2 * np.pi) * np.sin(t * (2 * np.pi) / (48* 60 * 60))
+    return (2 * np.pi) * np.sin(t * (2 * np.pi) / (48 * 60 * 60))
 
 # A sinusoidal current and heading function
 
@@ -89,8 +90,9 @@ def curfunc(x, t):
 
 
 def headfunc(t):
-    angle = 50. * np.cos(2 * np.pi *  t / (24 * 3600.)) + 45.0
+    angle = 50. * np.cos(2 * np.pi * t / (24 * 3600.)) + 45.0
     return angle / 180. * np.pi
+
 
 def headfunc_fast(t):
     angle = 50. * np.cos(2 * np.pi * (2 * t) / (24 * 3600.)) + 45.0
@@ -441,6 +443,496 @@ def stdout_redirected(to=os.devnull, stdout=None):
 # TODO: we'd like this to be in the model utils;
 # figure out the circular dependence
 
+def load_bathy_by_coord(minlat, maxlat, minlon, maxlon):
+    bathy_files = []
+    if minlat >= 9.932:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.912:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.902:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.892:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.882:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.872:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.862:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.852:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.842:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.832:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.822:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.812:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.802:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.792:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.782:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.772:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.762:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_17.txt"))
+        if maxlat >= 9.772:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.752:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_18.txt"))
+        if maxlat >= 9.762:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_17.txt"))
+        if maxlat >= 9.772:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.742:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_19.txt"))
+        if maxlat >= 9.752:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_18.txt"))
+        if maxlat >= 9.762:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_17.txt"))
+        if maxlat >= 9.772:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.732:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_20.txt"))
+        if maxlat >= 9.742:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_19.txt"))
+        if maxlat >= 9.752:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_18.txt"))
+        if maxlat >= 9.762:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_17.txt"))
+        if maxlat >= 9.772:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    elif minlat >= 9.721:
+        bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_21.txt"))
+        if maxlat >= 9.732:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_20.txt"))
+        if maxlat >= 9.742:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_19.txt"))
+        if maxlat >= 9.752:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_18.txt"))
+        if maxlat >= 9.762:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_17.txt"))
+        if maxlat >= 9.772:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_16.txt"))
+        if maxlat >= 9.782:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_15.txt"))
+        if maxlat >= 9.792:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_14.txt"))
+        if maxlat >= 9.802:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_13.txt"))
+        if maxlat >= 9.812:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_12.txt"))
+        if maxlat >= 9.822:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_11.txt"))
+        if maxlat >= 9.832:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_10.txt"))
+        if maxlat >= 9.842:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_9.txt"))
+        if maxlat >= 9.852:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_8.txt"))
+        if maxlat >= 9.862:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_7.txt"))
+        if maxlat >= 9.872:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_6.txt"))
+        if maxlat >= 9.882:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_5.txt"))
+        if maxlat >= 9.892:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_4.txt"))
+        if maxlat >= 9.902:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_3.txt"))
+        if maxlat >= 9.912:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_2.txt"))
+        if maxlat >= 9.932:
+            bathy_files.append(os.path.join(os.getenv("EPR_DATA"), f"bathy/epr_1.txt"))
+    else:
+        print("Sorry, these coordinates do not match our bathy data!")
+    return bathy_files
+
+def get_bathy(lat_min, lat_max, lon_min, lon_max, buffer=0.01, rsamp=0.1):
+    """Retrieves bathy data around a given site."""
+    # read in the bathy data
+    bathy_files = load_bathy_by_coord(lat_min - buffer,
+                                        lat_max + buffer,
+                                        lon_min - buffer,
+                                        lon_max + buffer)
+    bathy_dfs = []
+    for f in bathy_files:
+        print(f)
+        temp = pd.read_table(f, names=["lon", "lat", "depth"]).dropna()
+        bathy_dfs.append(temp)
+    bathy = pd.concat(bathy_dfs, ignore_index=True)
+    print(bathy)
+
+    # extract bathy with a decimal degree buffer in each direction
+    bathy = bathy[(bathy.lat < lat_max + buffer) & (bathy.lat > lat_min - buffer) &
+                    (bathy.lon < lon_max + buffer) & (bathy.lon > lon_min - buffer)]
+
+    # subsample bathy data and return
+    return bathy.sample(frac=rsamp, random_state=1)
+
 
 class ExactGPModel(gpy.models.ExactGP):
     """ Gaussian process regression model. """
@@ -453,7 +945,29 @@ class ExactGPModel(gpy.models.ExactGP):
         # self.mean_module = gpy.means.ConstantMean()
         self.mean_module = gpy.means.ZeroMean()
         self.covar_module = gpy.kernels.ScaleKernel(
-            gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True))
+            gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True))
+
+        if name is None:
+            name = "model_state.pth"
+        self.model_file = os.path.join(output_home(), f"{name}")
+
+    def forward(self, x):
+        mean_x = self.mean_module(x)
+        covar_x = self.covar_module(x)
+        return gpy.distributions.MultivariateNormal(mean_x, covar_x)
+
+class ExactGPModelPeriodic(gpy.models.ExactGP):
+    """ Gaussian process regression model. """
+
+    def __init__(self, train_x, train_y, likelihood, num_dims=1, name=None):
+        super().__init__(train_x, train_y, likelihood)
+        # self.likelihood = gpy.likelihoods.GaussianLikelihood(
+        #     noise_constraint=gpy.constraints.LessThan(1e-2))
+        # TODO: figure out if constant mean is working?
+        # self.mean_module = gpy.means.ConstantMean()
+        self.mean_module = gpy.means.ZeroMean()
+        self.covar_module = gpy.kernels.ScaleKernel(
+            gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.PeriodicKernel(ard_num_dims=num_dims))
 
         if name is None:
             name = "model_state.pth"
@@ -486,3 +1000,5 @@ class StandardApproximateGP(gpy.models.ApproximateGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpy.distributions.MultivariateNormal(mean_x, covar_x)
+
+

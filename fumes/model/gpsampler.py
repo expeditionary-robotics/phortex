@@ -5,14 +5,14 @@ import gpytorch as gpy
 import torch
 from scipy import interpolate
 
-from fumes.environment.utils import ExactGPModel
+from fumes.environment.utils import ExactGPModel, ExactGPModelPeriodic
 from fumes.model.utils import normalize_data, unnormalize_data
 
 
 class GPSampler(object):
     """Instantiates a GP sampler object."""
 
-    def __init__(self, datax, datay, training_iter=100, learning_rate=0.1):
+    def __init__(self, datax, datay, training_iter=100, learning_rate=0.1, type="RBF"):
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = "cpu" # manually select cpu
         self.x_minmax = (np.nanmin(datax), np.nanmax(datax))
@@ -22,7 +22,10 @@ class GPSampler(object):
         self.trainy = torch.Tensor(normalize_data(datay, self.y_minmax)).to(device=self.device)
 
         self.likelihood = gpy.likelihoods.GaussianLikelihood().to(device=self.device)
-        self.model = ExactGPModel(self.trainx, self.trainy, self.likelihood).to(device=self.device)
+        if type == "RBF":
+            self.model = ExactGPModel(self.trainx, self.trainy, self.likelihood).to(device=self.device)
+        elif type == "Periodic":
+            self.model = ExactGPModelPeriodic(self.trainx, self.trainy, self.likelihood).to(device=self.device)
 
         self.training_iter = training_iter
         self.learning_rate = learning_rate

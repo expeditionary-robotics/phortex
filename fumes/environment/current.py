@@ -15,9 +15,9 @@ class CurrMag(GPSampler):
         """Returns MLE functional for use in model class."""
         # Convert time to fractional hours from UTC 00:00:00
         t = t / 3600.
-        t = t % 24
+        # t = t % 24
         return self.cache_model(t)
-        
+
     def sample_magnitude(self, num_samples):
         # trainx = copy.copy(self.trainx)
         # trainx = trainx.cpu().numpy()
@@ -36,7 +36,7 @@ class CurrHead(GPSampler):
         """Returns MLE functional for use in model class."""
         # Convert time to fractional hours from UTC 00:00:00
         t = t / 3600
-        t = t % 24
+        # t = t % 24
         return self.cache_model(t) * np.pi / 180.
 
     def sample_heading(self, num_samples):

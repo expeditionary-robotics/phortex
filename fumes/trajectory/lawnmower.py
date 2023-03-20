@@ -177,3 +177,26 @@ class Spiral(Lawnmower):
             (self.lw, 0.),
             (self.lw, self.lh)
         ])
+
+    def reverse(self):
+        """Allows for the spiral to be flipped in order of execution."""
+        xt = self.xcoords.tolist()
+        xt.reverse()
+        self.xcoords = np.asarray(xt)
+        yt = self.ycoords.tolist()
+        yt.reverse()
+        self.ycoords = np.asarray(yt)
+        coords = [(x, y) for x, y in zip(self.xcoords, self.ycoords)]
+        self.path = LineString(coords)
+
+        # Translate trajectory
+        self.path = affinity.translate(
+            self.path, self.origin[0], self.origin[1])
+        self.corners = affinity.translate(
+            self.corners, self.origin[0], self.origin[1])
+
+        # Rotate trajectory
+        self.path = affinity.rotate(
+            self.path, self.orientation, origin=self.origin)
+        self.corners = affinity.rotate(
+            self.corners, self.orientation, origin=self.origin)

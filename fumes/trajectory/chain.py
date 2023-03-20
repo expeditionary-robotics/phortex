@@ -58,11 +58,11 @@ class Chain(Trajectory):
         for i, traj in enumerate(self.traj_list):
             all_coords_x += traj.path.xy[0]
             all_coords_y += traj.path.xy[1]
-            # all_coords_z += [self.altitude[i]]*len(traj.path.xy[0])
+            all_coords_z += [self.altitude[i]]*len(traj.path.xy[0])
         self.path = LineString(zip(all_coords_x, all_coords_y))
         self.xcoords = np.hstack([traj.xcoords for traj in self.traj_list])
         self.ycoords = np.hstack([traj.ycoords for traj in self.traj_list])
-        # self.zcoords = all_coords_z
+        self.zcoords = all_coords_z
 
     @property
     def length(self):
