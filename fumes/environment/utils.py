@@ -8,7 +8,7 @@ import contextlib
 import os
 import sys
 import random
-import pdb
+import utm
 import string
 
 import gpytorch as gpy
@@ -442,6 +442,7 @@ def stdout_redirected(to=os.devnull, stdout=None):
 
 # TODO: we'd like this to be in the model utils;
 # figure out the circular dependence
+
 
 def load_bathy_by_coord(minlat, maxlat, minlon, maxlon):
     bathy_files = []
@@ -911,13 +912,14 @@ def load_bathy_by_coord(minlat, maxlat, minlon, maxlon):
         print("Sorry, these coordinates do not match our bathy data!")
     return bathy_files
 
+
 def get_bathy(lat_min, lat_max, lon_min, lon_max, buffer=0.01, rsamp=0.1):
     """Retrieves bathy data around a given site."""
     # read in the bathy data
     bathy_files = load_bathy_by_coord(lat_min - buffer,
-                                        lat_max + buffer,
-                                        lon_min - buffer,
-                                        lon_max + buffer)
+                                      lat_max + buffer,
+                                      lon_min - buffer,
+                                      lon_max + buffer)
     bathy_dfs = []
     for f in bathy_files:
         print(f)
@@ -928,10 +930,21 @@ def get_bathy(lat_min, lat_max, lon_min, lon_max, buffer=0.01, rsamp=0.1):
 
     # extract bathy with a decimal degree buffer in each direction
     bathy = bathy[(bathy.lat < lat_max + buffer) & (bathy.lat > lat_min - buffer) &
-                    (bathy.lon < lon_max + buffer) & (bathy.lon > lon_min - buffer)]
+                  (bathy.lon < lon_max + buffer) & (bathy.lon > lon_min - buffer)]
 
     # subsample bathy data and return
     return bathy.sample(frac=rsamp, random_state=1)
+
+
+def get_bathy_jdfr(filepath):
+    """Retireve the bathy around the JDFR from the filepath."""
+    bathy_df = pd.read_table(filepath, names=[
+        "lon", "lat", "depth"]).dropna()
+    eb, nb, _, _ = utm.from_latlon(
+        bathy_df.lat.values, bathy_df.lon.values)
+    bathy_df.loc[:, "northing"] = nb
+    bathy_df.loc[:, "easting"] = eb
+    return bathy_df
 
 
 class ExactGPModel(gpy.models.ExactGP):
@@ -955,6 +968,7 @@ class ExactGPModel(gpy.models.ExactGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpy.distributions.MultivariateNormal(mean_x, covar_x)
+
 
 class ExactGPModelPeriodic(gpy.models.ExactGP):
     """ Gaussian process regression model. """
@@ -1000,5 +1014,3 @@ class StandardApproximateGP(gpy.models.ApproximateGP):
         mean_x = self.mean_module(x)
         covar_x = self.covar_module(x)
         return gpy.distributions.MultivariateNormal(mean_x, covar_x)
-
-
