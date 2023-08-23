@@ -1121,11 +1121,12 @@ class CrossflowMTT(StationaryMTT):
             pts = to_homogenous(pts[0], pts[1])
             T = translation(x * np.cos(heading) + self.loc[0],
                             x * np.sin(heading) + self.loc[1], z)
-            R = yrotation(-th + np.pi / 2)
+            R = xrotation(-th + np.pi/2)
+            Ry = yrotation(th + np.pi/2)
             Rz = zrotation(heading)
 
             # Apply affine transformation to points
-            pts_p = pts @ R @ Rz @ T
+            pts_p = pts @ R @ Ry @ Rz @ T
             if pts_all is None:
                 pts_all = pts_p
             else:

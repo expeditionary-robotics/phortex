@@ -43,9 +43,13 @@ def create_crossflow_world(locs, extent, s, tprof, sprof, rhoprof, curfunc, head
 SKIP = 100
 REFERENCE = (9.9055599, -104.294361, -2555.)
 RX, RY, RN, RL = utm.from_latlon(REFERENCE[0], REFERENCE[1])
-SMOKING_CHIMNEYS = [(9.905665, -104.294522, -2556.349),
-                    (9.905230, -104.294360, -2550.3),
-                    (9.905639, -104.294531, -2555.558)]
+
+SMOKING_CHIMNEYS = [(9.905976, -104.294459, -2555.7),
+                    (9.905916, -104.294563, -2555.8),
+                    (9.905397, -104.294366, -2547.5),
+                    (9.905581, -104.294478, -2553.9),
+                    (9.905937, -104.294604, -2556.5),
+                    (9.9050499, -104.29428, -2555.0)]
 BATHY = get_bathy(lat_min=9.904768,
                   lat_max=9.906458,
                   lon_min=-104.294727,
@@ -57,9 +61,39 @@ bathy_plot = go.Mesh3d(x=Beast, y=Bnorth, z=BATHY.depth,
                        colorscale='Viridis',
                        opacity=1.0,
                        name="Bathy")
-# name = 'eye = (x:0., y:0., z:2.5)'
-# camera = dict(eye=dict(x=1.25, y=1.25, z=0.1),
-#               center=dict(x=0, y=0, z=-0.2))
+
+# pull in the sentry data for reference
+sentry_file = os.path.join(os.getenv("EPR_DATA"), f"sentry/proc/sentry662_processed.csv")
+sentry_df = pd.read_csv(sentry_file)
+easting, northing, _, _ = utm.from_latlon(
+    sentry_df.lat.values, sentry_df.lon.values)
+sentry_df.loc[:, "northing"] = northing
+sentry_df.loc[:, "easting"] = easting
+
+# pull in the current data
+tiltmeter_file = os.path.join(
+    os.getenv("EPR_DATA"), f"current/YBW_2012823_Current.csv")
+tiltmeter_df = pd.read_csv(tiltmeter_file)
+tiltmeter_df.loc[:, "t"] = (pd.to_datetime(tiltmeter_df["ISO 8601 Time"],
+                            format="%Y-%m-%dT%H:%M:%S.%f") - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+
+# combine sentry and tiltmeter data
+scc_df = sentry_df.merge(tiltmeter_df, how="left", on="t")
+df_index = scc_df.index
+scc_df = scc_df.interpolate(method='linear')
+scc_df = scc_df.loc[df_index]
+print(scc_df.columns)
+
+phase1 = scc_df[scc_df.t < 1674284160]
+sentry_plot = go.Scatter3d(x=phase1.easting,
+                           y=phase1.northing,
+                           z=-phase1.depth,
+                           mode="markers",
+                           marker=dict(size=1,
+                                       color=phase1.potential_temp,
+                                       colorscale="Inferno",
+                                       colorbar=dict(thickness=30, x=-0.3)),
+                           name="Potential Temperature, Sentry")
 
 # Parameters
 z = np.linspace(0, 300, 100)  # height to integrate over
@@ -75,14 +109,14 @@ tprof_obj = Profile(datax[::SKIP], datayt[::SKIP], training_iter=30, learning_ra
 tprof = tprof_obj.profile
 sprof_obj = Profile(datax[::SKIP], datays[::SKIP], training_iter=30, learning_rate=0.1)
 sprof = sprof_obj.profile
-plt.plot(sprof(np.linspace(0, 1000, 100)), np.linspace(0, 1000, 100))
-plt.show()
+# plt.plot(sprof(np.linspace(0, 1000, 100)), np.linspace(0, 1000, 100))
+# plt.show()
 rhoprof = eos_rho  # function that computes density as func of S, T
 
 times = np.linspace(0, 24 * 3600, 24 * 3600)
 query_times = [0]  # , 6, 12]  # in hours
-def headfunc(t): return 0  # headfunc(times)
-def curfunc(z, t): return 0.12  # curfunc(None, times)
+def headfunc(t): return np.nanmedian(np.arctan2(phase1["Velocity-N (cm/s)"].values, phase1["Velocity-E (cm/s)"].values))  # headfunc(times)
+def curfunc(z, t): return np.nanmedian(phase1["Speed (cm/s)"].values) / 100.  # curfunc(None, times)
 
 
 # location of the vents; known
@@ -93,16 +127,21 @@ for sc in SMOKING_CHIMNEYS:
 print(locs)
 
 # fluid exit velocity; unknown
-v0s = [0.05, 0.05, 0.05]
+v0s = [0.05, 0.05, 0.05, 0.05, 0.05, 0.05]
 
 # orifice area; unknown
-a0s = [0.25, 0.25, 0.25]
+a0s = [0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
 
 # source salinity; estimate
-s0s = [34.608, 34.608, 34.608]
+s0s = [34.608, 34.608, 34.608, 34.608, 34.608, 34.608]
 
 # source temperature; estimate
-t0s = [270., 270., 270.]
+t0s = [np.mean([250., 227., 223., 302., 301.]),
+       np.mean([278., 275.]),
+       np.mean([339., 362., 350.]),
+       np.mean([363., 380.]),
+       np.mean([167.56, 220., 95., 120.]), 
+       np.mean([260., 277., 340., 371., 120.])]
 
 # source density
 rho0s = [eos_rho(t, s) for t, s, in zip(t0s, s0s)]  # source density
@@ -111,7 +150,7 @@ rho0s = [eos_rho(t, s) for t, s, in zip(t0s, s0s)]  # source density
 lam = 1.0  # for crossflow, major-minor axis ratio
 
 # assume that the mixing coefficients are fixed for all plumes
-entrainment = [0.12, 0.25]  # entrainment coeffs
+entrainment = [0.50, 0.25]  # entrainment coeffs
 
 # set the simulation boundaries
 extent = Extent(xrange=(-100., 100.),
@@ -141,15 +180,15 @@ envs = create_crossflow_world(locs=locs,
 multiplume = Multiplume(envs)
 
 # Get a plume intersection
-y = np.linspace(-50, 50, 100)
-x = np.zeros_like(y)
-height = np.zeros(y.shape[0] * x.shape[0])
-pq = multiplume.get_value(t=10, loc=(x, y, height), from_cache=False)
-plt.plot(y, pq)
-plt.xlabel('Y-coordinate')
-plt.ylabel('Plume-State')
-plt.title('Environment Slice at X=0')
-plt.show()
+# y = np.linspace(-50, 50, 100)
+# x = np.zeros_like(y)
+# height = np.zeros(y.shape[0] * x.shape[0])
+# pq = multiplume.get_value(t=10, loc=(x, y, height), from_cache=False)
+# plt.plot(y, pq)
+# plt.xlabel('Y-coordinate')
+# plt.ylabel('Plume-State')
+# plt.title('Environment Slice at X=0')
+# plt.show()
 
 # Get a birds-eye snapshot of plume probabilities
 fig, ax = plt.subplots(len(query_times), 2, sharex=True, sharey=True)
@@ -189,7 +228,7 @@ x = np.linspace(np.nanmin(Beast), np.nanmax(Beast), 100)
 y = np.linspace(np.nanmin(Bnorth), np.nanmax(Bnorth), 100)
 X, Y = np.meshgrid(x, y)
 # plane = go.Surface(x=X, y=Y, z=-2531 * np.ones_like(X), opacity=0.0, name="20m plane")
-fig = go.Figure(data=[bathy_plot, env_fig])  # , layout=layout)
+fig = go.Figure(data=[bathy_plot, sentry_plot, env_fig])  # , layout=layout)
 fig.update_layout(showlegend=True,
                   xaxis_title="Longitude",
                   yaxis_title="Latitude",
@@ -198,9 +237,11 @@ fig.update_layout(showlegend=True,
                              xaxis_title="",
                              yaxis_title="",
                              aspectmode="data",
-                             zaxis=dict(range=[-2575, -2450], tickfont=dict(size=20)),
-                             yaxis=dict(tickfont=dict(size=20), autorange="reversed"),
+                             zaxis=dict(range=[-2575, -2400], tickfont=dict(size=20)),
+                             yaxis=dict(tickfont=dict(size=20)),
                              xaxis=dict(tickfont=dict(size=20))),)
-                #   scene_camera=camera)
+#   scene_camera=camera)
 fig.update_yaxes(scaleanchor="x", scaleratio=1.0)
+SAVE_PATH=os.path.join(os.getenv("EPR_OUTPUT"), "epr_sentry/figures")
+fig.write_html(os.path.join(SAVE_PATH, f"ybw_simulation_southern.html"))
 fig.show()
