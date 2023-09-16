@@ -981,7 +981,7 @@ class ExactGPModelPeriodic(gpy.models.ExactGP):
         # self.mean_module = gpy.means.ConstantMean()
         self.mean_module = gpy.means.ZeroMean()
         self.covar_module = gpy.kernels.ScaleKernel(
-            gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.PeriodicKernel(ard_num_dims=num_dims))
+            gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.RBFKernel(ard_num_dims=num_dims, has_lengthscale=True) * gpy.kernels.PeriodicKernel(ard_num_dims=num_dims) * gpy.kernels.PeriodicKernel(ard_num_dims=num_dims))
 
         if name is None:
             name = "model_state.pth"

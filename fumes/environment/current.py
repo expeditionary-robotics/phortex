@@ -14,7 +14,7 @@ class CurrMag(GPSampler):
     def magnitude(self, z, t):
         """Returns MLE functional for use in model class."""
         # Convert time to fractional hours from UTC 00:00:00
-        t = t / 3600.
+        # t = t / 3600.
         # t = t % 24
         return self.cache_model(t)
 

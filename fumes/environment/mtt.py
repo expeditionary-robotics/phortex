@@ -1168,6 +1168,13 @@ class Multiplume(CrossflowMTT):
         for model in self.models:
             model.solve(t)
 
+    def envelope(self, t):
+        envelopes = []
+        for mod in self.models:
+            envelopes.append(mod.envelope(t))
+        return envelopes
+
+    
     def write_cache(self, tvec, xrange=None, yrange=None, zrange=None,
                     xres=None, yres=None, zres=None, overwrite=True):
         """Access individual models and set caches.
